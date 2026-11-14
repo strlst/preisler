@@ -33,4 +33,4 @@ The current architecture and agent working notes are kept in `AGENTS.md` and `SK
 
 ## License
 
-To be decided.
+Released under the [MIT License](LICENSE).
