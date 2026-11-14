@@ -62,9 +62,9 @@ git tag v0.1.0 && git push origin v0.1.0
 
 ## Privacy guard
 
-`:app:verify<Variant>PrivacyManifest` fails the build if the merged manifest (including permissions pulled in by libraries) requests INTERNET or any storage or media permission. `check` depends on it, and CI prints the permissions that were granted.
+`:app:verify<Variant>PrivacyManifest` fails the build if the merged manifest (including permissions pulled in by libraries) requests INTERNET, ACCESS_NETWORK_STATE or any storage or media permission. ML Kit's telemetry permissions are already stripped in `AndroidManifest.xml`. `check` depends on it, and CI prints the permissions that were granted.
 - If a new dependency trips the guard, remove its permission in the manifest with `tools:node="remove"`, or pick a different library. Never weaken the list without the user's approval.
-- When the LAN export goal lands, remove `INTERNET` from the list, update README → Privacy, and update AGENTS.md §3, all in the same commit.
+- When the LAN export goal lands, remove `INTERNET` from the list and from the `tools:node="remove"` entries, update README → Privacy, and update AGENTS.md §3, all in the same commit. Keep ML Kit telemetry from using the network some other way, for example by checking the destination host in the LAN client.
 
 ## Bump a dependency
 
@@ -79,9 +79,16 @@ git tag v0.1.0 && git push origin v0.1.0
    Then copy `gradlew*` and `gradle/wrapper/*` into the repo.
 5. Verify through CI as described above.
 
-## Add a receipt fixture *(available from Goal 4b)*
+## Capture OCR from a real receipt
 
-1. The user scans a receipt with a debug build, taps **Export OCR**, and sends the JSON together with the true total (and any other known fields).
+1. Install a **debug** build (see above). Release builds have no export button.
+2. Scan the receipt. On the result screen, tap **Export OCR**.
+3. Share it to wherever you can copy text from (mail, notes, chat), then paste the JSON here together with the **true total**. Add any other fields you know, such as subtotal and tax.
+4. The export contains only text and coordinates, never the picture. Still, check it for anything personal (names, card numbers, member IDs) before sending. Those values may be replaced with same-length placeholders, as long as the money values stay untouched.
+
+## Add a receipt fixture *(from Goal 4b)*
+
+1. Get the OCR JSON and the true values as described above.
 2. Create `receipt-core/src/test/resources/receipts/<NNNN>-<store>/` containing:
    - `ocr.json`: exactly as exported
    - `expected.json`: `{ "total": 1280 }` plus optional `subtotal`, `taxLines`, `date`, `storeName`

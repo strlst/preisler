@@ -55,6 +55,10 @@ android {
         buildConfig = true
     }
 
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
+
     lint {
         warningsAsErrors = false
         abortOnError = true
@@ -78,7 +82,13 @@ dependencies {
     implementation(libs.compose.material.icons.extended)
     debugImplementation(libs.compose.ui.tooling)
 
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.mlkit.text.recognition.japanese)
+
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
 
 /**
@@ -120,6 +130,7 @@ androidComponents {
                 forbidden.set(
                     listOf(
                         "android.permission.INTERNET",
+                        "android.permission.ACCESS_NETWORK_STATE",
                         "android.permission.READ_EXTERNAL_STORAGE",
                         "android.permission.WRITE_EXTERNAL_STORAGE",
                         "android.permission.MANAGE_EXTERNAL_STORAGE",

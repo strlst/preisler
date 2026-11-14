@@ -1,6 +1,6 @@
 # AGENTS.md — preisler architecture & working agreement
 
-> Status: **Approved (Goal 2, 2026-11-14).** Goal 3 (skeleton + CI) done; next up is Goal 4a.
+> Status: **Approved (Goal 2, 2026-11-14).** Goals 3 and 4a done (capture + OCR + debug export); next up is Goal 4b.
 > This file is the single source of truth for the architecture. Every goal that changes the
 > architecture must update it in the same commit.
 
@@ -55,9 +55,10 @@ There are just two modules on purpose. More get added only when a real need show
 |---------|--------|-----|
 | Language / UI | Kotlin, Jetpack Compose, Material 3, Navigation Compose | Modern and declarative, and makes a good-looking home screen cheap to build (R1). |
 | State | MVVM: `ViewModel` + `StateFlow`, one-way data flow | Simple and testable. |
-| DI | Manual (a small `AppContainer`) | The app is small, so Hilt would be overhead. Revisit if it grows. |
-| Camera | **CameraX** `Preview` + `ImageCapture.takePicture(executor, OnImageCapturedCallback)` | Delivers an in-memory `ImageProxy` and never writes a file (R2). *Rejected:* the ML Kit Document Scanner, which hands results back as file URIs and so breaks R2. |
-| OCR | **ML Kit Text Recognition v2 – Japanese, bundled model** (`com.google.mlkit:text-recognition-japanese`) | On-device, works offline, needs no Play Services download, handles kanji/kana/digits, and returns lines with bounding boxes. |
+| DI | Manual: `AppContainer`, owned by `PreislerApplication` | The app is small, so Hilt would be overhead. Revisit if it grows. |
+| Screen state | One `ScanViewModel`, scoped to the activity and shared by Scan and Result: `Idle → Processing → Done(document, result) / Failed` | The result screen reads the same in-memory state. Nothing survives process death, which is intended (R2). |
+| Camera | **CameraX 1.5.1** `LifecycleCameraController` + `PreviewView`, `IMAGE_CAPTURE` use case only, `takePicture(executor, OnImageCapturedCallback)` | Delivers an in-memory `ImageProxy` and never writes a file (R2). *Rejected:* the ML Kit Document Scanner, which hands results back as file URIs and so breaks R2. |
+| OCR | **ML Kit Text Recognition v2 – Japanese, bundled model** (`com.google.mlkit:text-recognition-japanese:16.0.1`), behind the `OcrEngine` fun interface; `buildOcrDocument` maps lines into upright coordinates | On-device, works offline, needs no Play Services download, handles kanji/kana/digits, and returns lines with bounding boxes. |
 | Serialization | kotlinx.serialization (JSON) | Used for test fixtures, the result model, and the future LAN payload. |
 | Build | Gradle 9.3.1 (Kotlin DSL), AGP 9.1.1 with built-in Kotlin, Kotlin 2.3.20, Compose BOM 2026.04.01; all versions in `gradle/libs.versions.toml` | Reproducible CI. compileSdk/targetSdk 36 until we move to Compose 1.12 (needs 37). |
 | Quality gates | Unit tests, Android Lint, ktlint (via Spotless) | Fail CI on any violation. |
@@ -65,10 +66,11 @@ There are just two modules on purpose. More get added only when a real need show
 
 ## 3. Privacy guarantees (R2)
 
-- The image only ever lives as an `ImageProxy` / `InputImage` in RAM. It is closed right after OCR and never written to disk or cache.
+- The image only ever lives as an `ImageProxy` / `InputImage` in RAM. `ScanViewModel` closes it with `use {}` on success and failure alike (covered by `ScanViewModelTest`). It is never written to disk or cache. Only the OCR text is kept, in memory.
 - The app requests no storage permission. **No `INTERNET` permission** until the LAN goal; even then only local-network traffic is allowed.
 - The only permission is `CAMERA`, requested when the user taps scan, with a clear explanation if they deny it.
-- Gradle task `:app:verify<Variant>PrivacyManifest` (wired into `check` and CI) fails the build if the merged manifest requests INTERNET or any storage/media permission. It was proven by a deliberate negative test on CI. See SKILLS.md → Privacy guard.
+- ML Kit's bundled model pulls in Google's telemetry transport, which declares `INTERNET` and `ACCESS_NETWORK_STATE`. Both are stripped with `tools:node="remove"` in our manifest, so the telemetry cannot send anything.
+- Gradle task `:app:verify<Variant>PrivacyManifest` (wired into `check` and CI) fails the build if the merged manifest requests INTERNET, ACCESS_NETWORK_STATE or any storage/media permission. It was proven by a deliberate negative test on CI. See SKILLS.md → Privacy guard.
 - Backups and device transfer are disabled (`allowBackup=false`, data extraction rules exclude everything).
 
 ## 4. Extraction pipeline (`:receipt-core`) — the core problem (R3)
@@ -128,7 +130,8 @@ receipt-core/src/test/resources/receipts/
   - Merge gate: **100% of the corpus passes.** A new receipt that fails gets committed together with the fix, never on its own (project rule: one commit only when all tests pass).
   - The README shows corpus size as a metric.
 - **Optional, later:** an instrumented test on a CI emulator that runs ML Kit on a few anonymized receipt images, to catch OCR regressions when the ML Kit version changes.
-- **UI:** Compose UI tests for the navigation Home → Scan → Result, using a fake `OcrEngine` and a fake camera source.
+- **App JVM tests:** `OcrMappingTest` (rotation, dropping lines without text or a box) and `ScanViewModelTest` (state machine; the frame is always closed). The fake `ImageProxy` is a `java.lang.reflect.Proxy`.
+- **UI (later):** Compose UI tests for the navigation Home → Scan → Result, using a fake `OcrEngine`. These need an emulator in CI.
 
 ## 6. CI / release (R5) — GitHub Actions
 
@@ -157,7 +160,7 @@ receipt-core/src/test/resources/receipts/
 2. ✅ This architecture plan (approved)
 3. ✅ Skeleton: both modules, Compose home screen, nav to a placeholder scan screen, CI building the debug APK artifact, release workflow
 4. Core loop, in order:
-   - 4a. Camera capture in memory → ML Kit OCR → raw text on the result screen, plus the debug "Export OCR" button
+   - 4a. ✅ Camera capture in memory → ML Kit OCR → raw text on the result screen, plus the debug "Export OCR" button
    - 4b. `:receipt-core` pipeline v1 (row assembly, normalization, keyword scoring) plus the first fixtures
    - 4c. Consistency checks and confidence; result screen UI with evidence
    - 4d. Grow the corpus with harder receipts (thermal fade, skew, 内税 vs 外税, multiple tax rates)

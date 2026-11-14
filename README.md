@@ -47,7 +47,7 @@ The project is built and released with GitHub Actions CI. Each build produces an
 
 ## Status
 
-🚧 Early stage. The architecture is approved and the skeleton app builds on CI: a home screen and a placeholder scan screen. Camera capture and OCR come next.
+🚧 Early stage. You can scan a receipt and see its recognized Japanese text, all on-device. Automatic total detection comes next.
 
 **Try it:** open [Actions](https://github.com/strlst/preisler/actions/workflows/ci.yml), pick the latest green run on `main`, download the `preisler-debug-…` artifact, and install the APK. Tagged releases (`v*`) publish signed APKs under [Releases](https://github.com/strlst/preisler/releases).
 

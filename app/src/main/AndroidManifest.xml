@@ -4,11 +4,24 @@
 
     <!-- The only permission preisler needs. See AGENTS.md §3 (privacy). -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!--
+        ML Kit's bundled models pull in Google's telemetry transport, which declares these.
+        preisler never talks to the network (README > Privacy), so they are stripped from the
+        merged manifest. The privacy guard in app/build.gradle.kts enforces this.
+    -->
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_NETWORK_STATE"
+        tools:node="remove" />
+
     <uses-feature
         android:name="android.hardware.camera.any"
         android:required="true" />
 
     <application
+        android:name=".PreislerApplication"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
