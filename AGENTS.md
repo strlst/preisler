@@ -1,6 +1,6 @@
 # AGENTS.md — preisler architecture & working agreement
 
-> Status: **Approved (Goal 2, 2026-11-14).** Implementation starts with Goal 3.
+> Status: **Approved (Goal 2, 2026-11-14).** Goal 3 (skeleton + CI) done; next up is Goal 4a.
 > This file is the single source of truth for the architecture. Every goal that changes the
 > architecture must update it in the same commit.
 
@@ -59,16 +59,17 @@ There are just two modules on purpose. More get added only when a real need show
 | Camera | **CameraX** `Preview` + `ImageCapture.takePicture(executor, OnImageCapturedCallback)` | Delivers an in-memory `ImageProxy` and never writes a file (R2). *Rejected:* the ML Kit Document Scanner, which hands results back as file URIs and so breaks R2. |
 | OCR | **ML Kit Text Recognition v2 – Japanese, bundled model** (`com.google.mlkit:text-recognition-japanese`) | On-device, works offline, needs no Play Services download, handles kanji/kana/digits, and returns lines with bounding boxes. |
 | Serialization | kotlinx.serialization (JSON) | Used for test fixtures, the result model, and the future LAN payload. |
-| Build | Gradle (Kotlin DSL) + version catalog `gradle/libs.versions.toml`, latest stable AGP/Kotlin, pinned at Goal 3 | Reproducible CI. |
+| Build | Gradle 9.3.1 (Kotlin DSL), AGP 9.1.1 with built-in Kotlin, Kotlin 2.3.20, Compose BOM 2026.04.01; all versions in `gradle/libs.versions.toml` | Reproducible CI. compileSdk/targetSdk 36 until we move to Compose 1.12 (needs 37). |
 | Quality gates | Unit tests, Android Lint, ktlint (via Spotless) | Fail CI on any violation. |
-| minSdk / targetSdk | 26 / latest stable | Covers essentially every phone in use in Japan. |
+| minSdk / targetSdk | 26 / 36 | Covers essentially every phone in use in Japan. |
 
 ## 3. Privacy guarantees (R2)
 
 - The image only ever lives as an `ImageProxy` / `InputImage` in RAM. It is closed right after OCR and never written to disk or cache.
 - The app requests no storage permission. **No `INTERNET` permission** until the LAN goal; even then only local-network traffic is allowed.
 - The only permission is `CAMERA`, requested when the user taps scan, with a clear explanation if they deny it.
-- A JVM/Robolectric test checks that the merged manifest contains no storage permission. For as long as the INTERNET permission is absent, the test checks that too.
+- Gradle task `:app:verify<Variant>PrivacyManifest` (wired into `check` and CI) fails the build if the merged manifest requests INTERNET or any storage/media permission. It was proven by a deliberate negative test on CI. See SKILLS.md → Privacy guard.
+- Backups and device transfer are disabled (`allowBackup=false`, data extraction rules exclude everything).
 
 ## 4. Extraction pipeline (`:receipt-core`) — the core problem (R3)
 
@@ -133,11 +134,11 @@ receipt-core/src/test/resources/receipts/
 
 | Workflow | Trigger | Steps | Output |
 |----------|---------|-------|--------|
-| `ci.yml` | push and PR to `main` | JDK setup → Gradle cache → `spotlessCheck` → `:receipt-core:test` → `:app:testDebugUnitTest` → `lint` → `assembleDebug` | `preisler-debug-<sha>.apk` artifact (installable, debug-signed) |
-| `release.yml` | tag `v*` | same checks → `assembleRelease`, signed with a keystore stored in repo secrets → GitHub Release | Signed `preisler-<version>.apk` attached to the release |
+| `ci.yml` | push to any branch, PR to `main` | JDK 17 → Gradle cache → `spotlessCheck` → `:receipt-core:test` → `:app:testDebugUnitTest` + `lintDebug` + privacy guard → print permissions → `assembleDebug` | `preisler-debug-<sha>` artifact (installable, debug-signed, app ID `dev.strlst.preisler.debug`) |
+| `release.yml` | tag `v*` | secret check → same checks (release variant) → `assembleRelease` (R8 minified), signed with keystore from secrets → `gh release create` | Signed `preisler-<tag>.apk` attached to the release |
 
 - Version name comes from the tag. Version code comes from the CI run number.
-- `main` stays green. Agents work on short-lived branches or directly on `main`, one commit per goal step, only after everything passes locally.
+- `main` stays green. The agent workspace cannot build Android, so CI is the build machine: WIP goes on a `goal-<n>-<topic>` branch until CI is green, then it is squashed into one commit on `main` (SKILLS.md → Verify a change).
 
 ## 7. Future: LAN export to desktop (R4) — designed now, built later
 
@@ -154,7 +155,7 @@ receipt-core/src/test/resources/receipts/
 
 1. ✅ Repo + README + MIT license
 2. ✅ This architecture plan (approved)
-3. Skeleton: both modules, Compose home screen, nav to a placeholder scan screen, CI building the debug APK artifact, release workflow
+3. ✅ Skeleton: both modules, Compose home screen, nav to a placeholder scan screen, CI building the debug APK artifact, release workflow
 4. Core loop, in order:
    - 4a. Camera capture in memory → ML Kit OCR → raw text on the result screen, plus the debug "Export OCR" button
    - 4b. `:receipt-core` pipeline v1 (row assembly, normalization, keyword scoring) plus the first fixtures
@@ -167,7 +168,7 @@ receipt-core/src/test/resources/receipts/
 ## 9. Agent working rules
 
 - Work on one goal at a time. Don't start the next goal without the user's OK when the goal is a planning gate.
-- Commit only when every test, lint and format check passes locally (`./gradlew check`).
+- Commit to `main` only when every test, lint, format and privacy check passes on CI (see SKILLS.md → Verify a change).
 - Keep `AGENTS.md` (architecture) and `SKILLS.md` (repeatable procedures, such as "add a receipt fixture", "cut a release", "bump ML Kit") current in the same commit as the change.
 - Ask when unsure. Never invent expected outputs for fixtures: reference totals come from the user or from the receipt image itself.
 - Commit trailer format: see the session attribution lines.

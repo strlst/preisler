@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">preisler</string>
+    <string name="home_tagline">Find the total on any Japanese receipt.</string>
+    <string name="home_tagline_ja">レシートの合計をすばやく読み取り</string>
+    <string name="home_scan_button">Scan receipt</string>
+    <string name="home_privacy_note">On-device only · photos are never saved</string>
+    <string name="scan_title">Scan</string>
+    <string name="scan_placeholder">The camera arrives in the next step (Goal 4a).</string>
+    <string name="back">Back</string>
+</resources>
