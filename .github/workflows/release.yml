@@ -3,6 +3,8 @@ name: Release
 on:
   push:
     tags: ["v*"]
+    # Dry run: pushing this branch builds and verifies a signed APK without tagging or publishing.
+    branches: ["release-dry-run"]
   workflow_dispatch:
     inputs:
       version:
@@ -17,7 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      PREISLER_VERSION_NAME: ${{ inputs.version || github.ref_name }}
+      PREISLER_VERSION_NAME: ${{ inputs.version || (github.ref_type == 'tag' && github.ref_name) || '0.0.0-dryrun' }}
+      DRY_RUN: ${{ github.ref == 'refs/heads/release-dry-run' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -25,17 +28,25 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         env:
           VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           if ! [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
             echo "::error::Version must look like v1.2.3, got '$VERSION'"
             exit 1
           fi
           if git ls-remote --exit-code --tags origin "refs/tags/$VERSION" >/dev/null; then
-            echo "::error::Tag $VERSION already exists"
-            exit 1
+            if gh release view "$VERSION" >/dev/null 2>&1; then
+              echo "::error::Release $VERSION already exists"
+              exit 1
+            fi
+            # Left behind by an earlier failed run: no release was published, so it is safe to move.
+            echo "::warning::Tag $VERSION exists without a release; moving it to $GITHUB_SHA"
+            git tag -f "$VERSION"
+            git push -f origin "refs/tags/$VERSION"
+          else
+            git tag "$VERSION"
+            git push origin "$VERSION"
           fi
-          git tag "$VERSION"
-          git push origin "$VERSION"
 
       - uses: actions/setup-java@v4
         with:
@@ -61,7 +72,8 @@ jobs:
           echo "PREISLER_KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
 
       - name: Checks
-        run: ./gradlew spotlessCheck :receipt-core:test :app:testReleaseUnitTest :app:lintRelease :app:verifyReleasePrivacyManifest
+        # AGP 9 creates unit-test tasks for the debug build type only.
+        run: ./gradlew spotlessCheck :receipt-core:test :app:testDebugUnitTest :app:lintRelease :app:verifyReleasePrivacyManifest
 
       - name: Assemble signed release APK
         env:
@@ -70,12 +82,19 @@ jobs:
           PREISLER_KEY_PASSWORD: ${{ secrets.PREISLER_KEY_PASSWORD }}
         run: ./gradlew :app:assembleRelease
 
+      - name: Verify APK signature
+        run: |
+          apksigner=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$apksigner" verify --print-certs app/build/outputs/apk/release/app-release.apk | grep -v -i "public key"
+
       - name: Rename APK
+        if: env.DRY_RUN != 'true'
         run: |
           mkdir -p out
           cp app/build/outputs/apk/release/app-release.apk "out/preisler-${PREISLER_VERSION_NAME}.apk"
 
       - name: Publish GitHub release
+        if: env.DRY_RUN != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
