@@ -43,6 +43,10 @@ jobs:
       - name: Assemble debug APK
         run: ./gradlew :app:assembleDebug
 
+      # Catches R8/minification and release-lint problems before a real release (unsigned, not uploaded).
+      - name: Assemble release APK (unsigned smoke test)
+        run: ./gradlew :app:lintRelease :app:assembleRelease
+
       - name: Rename APK
         run: |
           mkdir -p out

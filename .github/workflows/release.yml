@@ -3,6 +3,11 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, e.g. v0.1.0 (the tag is created from the selected branch)"
+        required: true
 
 permissions:
   contents: write
@@ -12,9 +17,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      PREISLER_VERSION_NAME: ${{ github.ref_name }}
+      PREISLER_VERSION_NAME: ${{ inputs.version || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Validate version and create tag (manual runs)
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if ! [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::Version must look like v1.2.3, got '$VERSION'"
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$VERSION" >/dev/null; then
+            echo "::error::Tag $VERSION already exists"
+            exit 1
+          fi
+          git tag "$VERSION"
+          git push origin "$VERSION"
 
       - uses: actions/setup-java@v4
         with:
@@ -52,9 +73,14 @@ jobs:
       - name: Rename APK
         run: |
           mkdir -p out
-          cp app/build/outputs/apk/release/app-release.apk "out/preisler-${GITHUB_REF_NAME}.apk"
+          cp app/build/outputs/apk/release/app-release.apk "out/preisler-${PREISLER_VERSION_NAME}.apk"
 
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" out/*.apk --title "preisler $GITHUB_REF_NAME" --generate-notes
+        run: |
+          if gh release view "$PREISLER_VERSION_NAME" >/dev/null 2>&1; then
+            gh release upload "$PREISLER_VERSION_NAME" out/*.apk --clobber
+          else
+            gh release create "$PREISLER_VERSION_NAME" out/*.apk --title "preisler $PREISLER_VERSION_NAME" --generate-notes
+          fi

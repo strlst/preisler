@@ -137,8 +137,8 @@ receipt-core/src/test/resources/receipts/
 
 | Workflow | Trigger | Steps | Output |
 |----------|---------|-------|--------|
-| `ci.yml` | push to any branch, PR to `main` | JDK 17 → Gradle cache → `spotlessCheck` → `:receipt-core:test` → `:app:testDebugUnitTest` + `lintDebug` + privacy guard → print permissions → `assembleDebug` | `preisler-debug-<sha>` artifact (installable, debug-signed, app ID `dev.strlst.preisler.debug`) |
-| `release.yml` | tag `v*` | secret check → same checks (release variant) → `assembleRelease` (R8 minified), signed with keystore from secrets → `gh release create` | Signed `preisler-<tag>.apk` attached to the release |
+| `ci.yml` | push to any branch, PR to `main` | JDK 17 → Gradle cache → `spotlessCheck` → `:receipt-core:test` → `:app:testDebugUnitTest` + `lintDebug` + privacy guard → print permissions → `assembleDebug` → unsigned `lintRelease` + `assembleRelease` smoke test | `preisler-debug-<sha>` artifact (installable, debug-signed, app ID `dev.strlst.preisler.debug`) |
+| `release.yml` | tag `v*`, or **Run workflow** with a version (creates the tag) | secret check → same checks (release variant) → `assembleRelease` (R8 minified), signed with keystore from secrets → `gh release create` | Signed `preisler-<tag>.apk` attached to the release |
 
 - Version name comes from the tag. Version code comes from the CI run number.
 - `main` stays green. The agent workspace cannot build Android, so CI is the build machine: WIP goes on a `goal-<n>-<topic>` branch until CI is green, then it is squashed into one commit on `main` (SKILLS.md → Verify a change).

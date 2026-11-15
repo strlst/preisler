@@ -54,10 +54,12 @@ Add four repository secrets under GitHub → Settings → Secrets and variables 
 
 Keep `preisler-release.jks` backed up somewhere safe. Losing it means existing installs can't be updated.
 
-For each release:
-```sh
-git tag v0.1.0 && git push origin v0.1.0
-```
+For each release, either:
+- **One click (recommended):** GitHub → Actions → **Release** → **Run workflow** → choose `main` and enter a version such as `v0.1.0`. The workflow checks the format, makes sure the tag doesn't exist yet, and creates it.
+- **Or from a terminal:** `git tag v0.1.0 && git push origin v0.1.0`. This also works if a release was already drafted in the GitHub UI: the APK is then uploaded to it.
+
+The agent session can push branches but **not tags**, so the user starts releases.
+
 `release.yml` runs the checks, builds a minified APK signed with the release keystore, and publishes `preisler-v0.1.0.apk` as a GitHub Release. The version name comes from the tag and the version code from the run number.
 
 ## Privacy guard
