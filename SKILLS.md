@@ -60,6 +60,10 @@ For each release, either:
 
 The agent session can push branches but **not tags**, so the user starts releases.
 
+**Dry run (the agent can do this):** push any commit to the `release-dry-run` branch, e.g. `git push -f origin main:release-dry-run`. `release.yml` then runs every check, builds the APK signed with the real keystore and prints its certificate, but creates no tag and publishes nothing. Do this before asking the user to release whenever `release.yml`, signing or the build setup changed.
+
+**If a release run fails** after creating its tag, fix the problem and run the workflow again with the same version. A tag without a published release is moved to the new commit automatically. AGP 9 note: unit-test tasks exist for the debug build type only (`testDebugUnitTest`), so release checks use those.
+
 `release.yml` runs the checks, builds a minified APK signed with the release keystore, and publishes `preisler-v0.1.0.apk` as a GitHub Release. The version name comes from the tag and the version code from the run number.
 
 ## Privacy guard
