@@ -1,6 +1,6 @@
 # SKILLS.md — repeatable procedures
 
-These are step-by-step recipes for recurring work. Keep each one current. When a procedure changes, update it in the same commit as the change. The architecture itself lives in `AGENTS.md`.
+Step-by-step recipes for recurring work. When a procedure changes, update it in the same commit. The design and its reasons live in `AGENTS.md`; this file only says *how*.
 
 ---
 
@@ -9,7 +9,7 @@ These are step-by-step recipes for recurring work. Keep each one current. When a
 Every commit to `main` must pass the full CI pipeline. The agent workspace has no Android SDK and no access to Maven or Google repos, so **CI is the build machine**:
 
 1. Create a branch `goal-<n>-<topic>` and push WIP commits freely.
-2. `.github/workflows/ci.yml` runs on every push and covers formatting, core tests, app tests, lint, the privacy guard, and the debug APK.
+2. `.github/workflows/ci.yml` runs on every push (contents: AGENTS.md §6). The log prints `receipt-core tests: N run, 0 failed`, the granted permissions and an APK size report.
 3. Poll the run and read the logs through the REST API (GraphQL is unavailable):
    ```sh
    gh api "repos/strlst/preisler/actions/runs?branch=<branch>&per_page=1" \
@@ -33,7 +33,7 @@ awk 'length > 120 {print FILENAME": "FNR}' $(git ls-files '*.kt' '*.kts')
 
 1. Open GitHub → **Actions** → the latest green **CI** run on `main` → **Artifacts**, and download `preisler-debug-<sha>`.
 2. Unzip it and install the APK with `adb install -r preisler-debug-<sha>.apk`, or open it on the phone and allow "install unknown apps".
-3. The debug build has the application ID `dev.strlst.preisler.debug`, so it can sit next to a release build.
+3. The debug build has the application ID `dev.strlst.preisler.debug`, so it can sit next to a release build. It only runs on 64-bit ARM (real phones, or an ARM emulator).
 
 ## Cut a release
 
@@ -64,9 +64,13 @@ The agent session can push branches but **not tags**, so the user starts release
 
 ## Privacy guard
 
-`:app:verify<Variant>PrivacyManifest` fails the build if the merged manifest (including permissions pulled in by libraries) requests INTERNET, ACCESS_NETWORK_STATE or any storage or media permission. ML Kit's telemetry permissions are already stripped in `AndroidManifest.xml`. `check` depends on it, and CI prints the permissions that were granted.
+What it checks: AGENTS.md §3.
 - If a new dependency trips the guard, remove its permission in the manifest with `tools:node="remove"`, or pick a different library. Never weaken the list without the user's approval.
-- When the LAN export goal lands, remove `INTERNET` from the list and from the `tools:node="remove"` entries, update README → Privacy, and update AGENTS.md §3, all in the same commit. Keep ML Kit telemetry from using the network some other way, for example by checking the destination host in the LAN client.
+- When the LAN export lands: remove `INTERNET` from the guard list and from the `tools:node="remove"` entries, and update README → Privacy and AGENTS.md §3, all in one commit. ML Kit telemetry must then still not reach the network, for example by restricting the LAN client to local addresses.
+
+## Check APK size
+
+CI's **APK size report** step lists both APKs, their largest entries and the native library size per CPU type. After any dependency change, compare it with the last numbers in AGENTS.md §2 (Platforms). A new CPU type under `lib/` means `ndk.abiFilters` was bypassed. A large `classes*.dex` in release means R8 keep rules are too broad.
 
 ## Bump a dependency
 

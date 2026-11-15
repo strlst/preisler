@@ -1,69 +1,46 @@
 # preisler
 
-**preisler** is an Android app, written in Kotlin, that scans Japanese receipts (レシート) and pulls out the financial information on them. The main goal is to find the **total price** (合計) reliably.
+**preisler** is an Android app, written in Kotlin, that scans Japanese receipts (レシート) and finds the **total price** (合計). Everything happens on the phone.
 
-## Purpose
-
-Japanese receipts are dense and printed in many layouts. They mix full-width and half-width characters and list several totals, such as 小計 (subtotal), 合計 (total), お預り (amount tendered), お釣り (change), and tax breakdowns at 8% and 10%. Reading the right number by hand is tedious. preisler aims to:
-
-- Open on a home screen with a clear call to action instead of dropping you straight into the camera.
-- Take one picture for processing only. **No images are saved** to the device.
-- Run OCR on the picture and apply rules made for Japanese receipts to find the total (and, later, other details such as date, store and tax).
-- Later, send the results over the local network to a desktop companion (for example a small Python script). The architecture is designed with this in mind from the start.
-
-## Privacy
-
-preisler is built so receipts stay private:
-
-- **No pictures are stored.** The camera hands the photo to the app in memory. It is read by on-device OCR and then discarded. Nothing is written to storage, the cache or the gallery.
-- **No storage permission.** The app cannot read or write your files.
-- **On-device OCR.** Text recognition uses ML Kit's bundled Japanese model and runs fully offline. Receipt contents never go to a cloud service.
-- **No internet permission.** The app cannot talk to the internet at all. The only permission it asks for is the camera.
-- The planned desktop link (see below) will be **local network only**. It will be opt-in and protected by a pairing code. When it lands, that will be documented here.
-
-Automated tests check the merged Android manifest, so these claims can't quietly regress.
-
-## Architecture
-
-The app is split into two modules:
-
-| Module | What it contains |
-|--------|------------------|
-| `:app` | Android only: the Compose UI, CameraX capture and the ML Kit OCR adapter |
-| `:receipt-core` | Pure Kotlin with no Android dependencies: everything that turns OCR text into a total (row rebuilding, text normalization, keyword scoring, cross-checks such as 小計 + 税 = 合計) |
-
-Why split it this way:
-
-- **Fast, reliable tests.** The hardest part, finding the right total, runs as plain JVM unit tests against a growing set of real receipts in seconds, with no emulator needed. Every receipt in the set must pass before a change is merged.
-- **Swappable OCR.** The core logic only sees its own `OcrDocument` model, so ML Kit could be replaced or upgraded without touching the extraction rules.
-- **Reusable on the desktop.** The same core and result format (versioned JSON) can be used by a desktop tool or a CLI. This makes the planned LAN export and its desktop counterpart straightforward.
-- **Clear boundaries.** UI and camera code can't creep into the parsing logic, which keeps it deterministic and easy to change.
-
-See [`AGENTS.md`](AGENTS.md) for the full design.
-
-## Release cycle
-
-The project is built and released with GitHub Actions CI. Each build produces an installable APK as a downloadable artifact.
+Japanese receipts are dense, mix full- and half-width characters, and list several amounts that look like a total: 小計 (subtotal), 合計 (total), お預り (tendered), お釣り (change), and 8% and 10% tax lines. preisler reads the receipt with on-device OCR and uses rules written for Japanese receipts, including the receipt's own arithmetic, to pick the right number.
 
 ## Status
 
-🚧 Early stage. You can scan a receipt and preisler finds the total (合計) on-device, with a confidence rating.
+🚧 Early stage. You can scan a receipt and get its total with a confidence rating. Date, store and tax details come later, and so does sending results to a desktop app over the local network.
 
 **Accuracy on the test corpus:** 17 / 17 real receipts (konbini, supermarkets, restaurants, shops, meal tickets). Every change must keep this at 100%.
 
-**Try it:** open [Actions](https://github.com/strlst/preisler/actions/workflows/ci.yml), pick the latest green run on `main`, download the `preisler-debug-…` artifact, and install the APK. Tagged releases (`v*`) publish signed APKs under [Releases](https://github.com/strlst/preisler/releases).
+**Try it:** signed APKs are under [Releases](https://github.com/strlst/preisler/releases). Development builds come from the latest green [CI run](https://github.com/strlst/preisler/actions/workflows/ci.yml) on `main` (the `preisler-debug-…` artifact). The app runs on 64-bit ARM phones with Android 8.0 or newer.
 
-## Note: an experiment in fully agentic engineering
+## Privacy
 
-This repository is an experiment in **fully agentic software engineering**. An AI agent (Claude) does the planning, architecture, code, tests, CI setup and documentation. A human sets goals, supplies test data (photos of real receipts) and approves each milestone. Work moves forward one goal at a time:
+- **No pictures are stored.** The photo stays in memory, is read by on-device OCR, and is discarded. Nothing is written to storage, the cache or the gallery.
+- **On-device OCR.** ML Kit's bundled Japanese model runs fully offline. Receipt contents never go to a cloud service.
+- **No internet and no storage permission.** The only permission is the camera. Google's ML Kit telemetry is cut off as well, because its network permissions are removed from the app.
+- **No backups.** The app keeps no data, and Android backup and device transfer are disabled.
+- The planned desktop link will be **local network only**, opt-in, and protected by a pairing code. This section will be updated when it lands.
 
-1. Create the repository and README *(this step)*
-2. Agree on a detailed architecture plan
-3. Build a skeleton app on CI with installable artifacts
-4. Implement core features step by step, each with clear test targets and reference outputs
-5. Refactor and simplify after each feature to keep technical debt low
+The build fails if the app's merged manifest ever requests network or storage access, so these claims can't quietly regress.
 
-The current architecture and agent working notes are kept in `AGENTS.md` and `SKILLS.md`.
+## Architecture
+
+| Module | What it contains |
+|--------|------------------|
+| `:app` | Android only: the Compose UI, CameraX capture, the ML Kit OCR adapter |
+| `:receipt-core` | Pure Kotlin, no Android: everything that turns OCR text into a total (row rebuilding, text clean-up, keyword scoring, cross-checks such as お預り − お釣り = 合計) |
+
+Why it's split this way:
+
+- **Fast, reliable tests.** Finding the right total, the hard part, runs as plain JVM tests against real receipts in seconds, with no emulator.
+- **Swappable OCR.** The rules only see preisler's own `OcrDocument` model, so ML Kit can be upgraded or replaced without touching them.
+- **Reusable on the desktop.** The same core and its versioned JSON result can power a desktop tool or a CLI, which keeps the planned LAN export simple.
+- **Clear boundaries.** UI and camera code can't creep into the parsing logic, so it stays deterministic and easy to change.
+
+The full design is in [`AGENTS.md`](AGENTS.md).
+
+## An experiment in fully agentic engineering
+
+An AI agent (Claude) does the planning, architecture, code, tests, CI and documentation. A human sets goals, supplies test data (real receipts) and approves milestones. Work moves one goal at a time: repository → architecture plan → skeleton app on CI → features, each with test targets and reference outputs, followed by a refactor pass. Agent notes are in [`AGENTS.md`](AGENTS.md) (design) and [`SKILLS.md`](SKILLS.md) (procedures).
 
 ## License
 

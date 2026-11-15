@@ -14,9 +14,6 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.DocumentScanner
-import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -29,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -99,14 +97,14 @@ fun HomeScreen(onScanClick: () -> Unit) {
                             contentColor = Color.White,
                         ),
                 ) {
-                    Icon(Icons.Outlined.DocumentScanner, contentDescription = null)
+                    Icon(painterResource(R.drawable.ic_scan), contentDescription = null)
                     Spacer(Modifier.width(12.dp))
                     Text(stringResource(R.string.home_scan_button), style = MaterialTheme.typography.titleMedium)
                 }
                 Spacer(Modifier.height(16.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        Icons.Outlined.Lock,
+                        painterResource(R.drawable.ic_lock),
                         contentDescription = null,
                         tint = PreislerColors.Paper.copy(alpha = 0.6f),
                         modifier = Modifier.size(16.dp),

@@ -27,10 +27,6 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.FlashOff
-import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -51,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -93,7 +90,7 @@ fun ScanScreen(
             modifier = Modifier.safeDrawingPadding().padding(8.dp),
             colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.4f)),
         ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = Color.White)
+            Icon(painterResource(R.drawable.ic_arrow_back), stringResource(R.string.back), tint = Color.White)
         }
     }
 }
@@ -170,7 +167,7 @@ private fun CameraContent(
                         colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.4f)),
                     ) {
                         Icon(
-                            if (torchOn) Icons.Filled.FlashOn else Icons.Filled.FlashOff,
+                            painterResource(if (torchOn) R.drawable.ic_flash_on else R.drawable.ic_flash_off),
                             contentDescription = stringResource(R.string.scan_torch),
                             tint = Color.White,
                         )

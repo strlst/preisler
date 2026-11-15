@@ -14,10 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.CameraAlt
-import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -63,7 +60,10 @@ fun ResultScreen(
                 title = { Text(stringResource(R.string.result_title)) },
                 navigationIcon = {
                     IconButton(onClick = onClose) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+                        Icon(
+                            painterResource(R.drawable.ic_arrow_back),
+                            contentDescription = stringResource(R.string.back),
+                        )
                     }
                 },
             )
@@ -78,18 +78,34 @@ fun ResultScreen(
                     .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            TotalCard(total = done?.result?.total, confidence = done?.result?.confidence ?: Confidence.NONE)
+            TotalCard(
+                total = done?.result?.total,
+                confidence = done?.result?.confidence ?: Confidence.NONE,
+            )
             if (done != null) RecognizedTextCard(done.document)
+            if (BuildConfig.DEBUG && done != null) {
+                Text(
+                    stringResource(
+                        R.string.result_debug_timings,
+                        done.timings.ocrMillis,
+                        done.timings.extractMillis,
+                        done.document.imageWidth,
+                        done.document.imageHeight,
+                    ),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = FontFamily.Monospace,
+                )
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(onClick = onRetry, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Outlined.CameraAlt, contentDescription = null)
+                    Icon(painterResource(R.drawable.ic_camera), contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.result_retry))
                 }
                 if (BuildConfig.DEBUG && done != null) {
                     val context = LocalContext.current
                     OutlinedButton(onClick = { context.shareOcrJson(done.document) }, modifier = Modifier.weight(1f)) {
-                        Icon(Icons.Outlined.IosShare, contentDescription = null)
+                        Icon(painterResource(R.drawable.ic_share), contentDescription = null)
                         Spacer(Modifier.width(8.dp))
                         Text(stringResource(R.string.result_export_ocr))
                     }

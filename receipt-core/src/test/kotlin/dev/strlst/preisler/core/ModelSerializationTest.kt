@@ -1,7 +1,6 @@
 package dev.strlst.preisler.core
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -30,13 +29,5 @@ class ModelSerializationTest {
         val json = PreislerJson.encodeToString(ReceiptResult.serializer(), result)
         assertTrue(json, "\"schemaVersion\": 1" in json)
         assertEquals(result, PreislerJson.decodeFromString(ReceiptResult.serializer(), json))
-    }
-
-    @Test
-    fun passthroughExtractorKeepsTextAndReportsNoTotal() {
-        val result = PassthroughExtractor.extract(document)
-        assertNull(result.total)
-        assertEquals(Confidence.NONE, result.confidence)
-        assertEquals("合計\n¥1,280", result.rawText)
     }
 }

@@ -31,12 +31,19 @@ private val total =
 private val whitespace = Regex("""\s+""")
 private val amountText = Regex("""[¥Y]?\s*[0-9][0-9 ,.]*""")
 
-/** The row's words with amounts and whitespace removed, e.g. "合 計 ¥1,280" → "合計". */
-fun labelOf(row: Row): String =
+/**
+ * The row's words with amounts and whitespace removed, e.g. "合 計 ¥1,280" → "合計".
+ * [amounts] holds [parseAmounts] per line; pass it when already computed.
+ */
+fun labelOf(
+    row: Row,
+    amounts: List<List<Amount>> = row.lines.map { parseAmounts(it.text) },
+): String =
     row.lines
-        .joinToString("") { line ->
+        .zip(amounts)
+        .joinToString("") { (line, found) ->
             val text = normalizeText(line.text)
-            if (parseAmounts(line.text).isEmpty()) text else text.replace(amountText, " ")
+            if (found.isEmpty()) text else text.replace(amountText, " ")
         }.replace(whitespace, "")
 
 fun classify(label: String): Set<RowKind> {

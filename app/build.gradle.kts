@@ -19,6 +19,8 @@ android {
         versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
         versionName = System.getenv("PREISLER_VERSION_NAME") ?: "0.0.0-dev"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // Only 64-bit ARM: ML Kit's OCR library is ~11 MB per CPU type (AGENTS.md §2).
+        ndk { abiFilters += "arm64-v8a" }
     }
 
     signingConfigs {
@@ -55,10 +57,6 @@ android {
         buildConfig = true
     }
 
-    testOptions {
-        unitTests.isReturnDefaultValues = true
-    }
-
     lint {
         warningsAsErrors = false
         abortOnError = true
@@ -79,7 +77,6 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
-    implementation(libs.compose.material.icons.extended)
     debugImplementation(libs.compose.ui.tooling)
 
     implementation(libs.androidx.camera.camera2)

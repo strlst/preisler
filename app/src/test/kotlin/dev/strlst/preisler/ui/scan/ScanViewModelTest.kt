@@ -4,7 +4,7 @@ import androidx.camera.core.ImageProxy
 import dev.strlst.preisler.core.BoundingBox
 import dev.strlst.preisler.core.OcrDocument
 import dev.strlst.preisler.core.OcrLine
-import dev.strlst.preisler.core.PassthroughExtractor
+import dev.strlst.preisler.core.TotalExtractor
 import dev.strlst.preisler.ocr.OcrEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,7 +39,7 @@ class ScanViewModelTest {
             } as ImageProxy
     }
 
-    private fun viewModel(engine: OcrEngine) = ScanViewModel(engine, PassthroughExtractor, dispatcher)
+    private fun viewModel(engine: OcrEngine) = ScanViewModel(engine, TotalExtractor, dispatcher)
 
     @Test
     fun successProducesDoneAndClosesFrame() {
@@ -51,7 +51,8 @@ class ScanViewModelTest {
         val state = vm.state.value
         assertTrue(state is ScanState.Done)
         assertEquals(document, (state as ScanState.Done).document)
-        assertEquals("合計 ¥1,280", state.result.rawText)
+        assertEquals(1280L, state.result.total)
+        assertTrue("timings are measured", state.timings.ocrMillis >= 0 && state.timings.extractMillis >= 0)
         assertTrue("frame must be closed after OCR", frame.closed)
     }
 

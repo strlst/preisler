@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.time.measureTimedValue
 
 sealed interface ScanState {
     data object Idle : ScanState
@@ -23,12 +24,19 @@ sealed interface ScanState {
     data class Done(
         val document: OcrDocument,
         val result: ReceiptResult,
+        val timings: Timings,
     ) : ScanState
 
     data class Failed(
         val message: String,
     ) : ScanState
 }
+
+/** How long each step took, shown in debug builds to tune capture resolution. */
+data class Timings(
+    val ocrMillis: Long,
+    val extractMillis: Long,
+)
 
 /**
  * Drives capture → OCR → extraction. Shared by the scan and result screens.
@@ -49,9 +57,11 @@ class ScanViewModel(
         viewModelScope.launch {
             _state.value =
                 try {
-                    val document = image.use { ocr.recognize(it) }
-                    val result = withContext(workDispatcher) { extractor.extract(document) }
-                    ScanState.Done(document, result)
+                    val (document, ocrTime) = measureTimedValue { image.use { ocr.recognize(it) } }
+                    val (result, extractTime) =
+                        withContext(workDispatcher) { measureTimedValue { extractor.extract(document) } }
+                    val timings = Timings(ocrTime.inWholeMilliseconds, extractTime.inWholeMilliseconds)
+                    ScanState.Done(document, result, timings)
                 } catch (e: Exception) {
                     ScanState.Failed(e.message ?: e.javaClass.simpleName)
                 }

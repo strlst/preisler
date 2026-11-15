@@ -47,6 +47,15 @@ jobs:
       - name: Assemble release APK (unsigned smoke test)
         run: ./gradlew :app:lintRelease :app:assembleRelease
 
+      - name: APK size report
+        run: |
+          for apk in app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/release/app-release-unsigned.apk; do
+            echo "== $apk: $(( $(stat -c%s "$apk") / 1024 )) KiB"
+            unzip -lv "$apk" | awk 'NR>3 && $1 ~ /^[0-9]+$/ {print $3, $1, $8}' | sort -rn | head -12 \
+              | awk '{printf "  %8d KiB compressed  %8d KiB raw  %s\n", $1/1024, $2/1024, $3}'
+            unzip -l "$apk" | awk '$4 ~ /^lib\// {split($4,p,"/"); s[p[2]]+=$1} END {for (a in s) printf "  ABI %-12s %6d KiB raw\n", a, s[a]/1024}'
+          done
+
       - name: Rename APK
         run: |
           mkdir -p out

@@ -22,5 +22,6 @@
     <string name="result_no_text">No text found. Try better lighting or hold the phone closer.</string>
     <string name="result_retry">Scan again</string>
     <string name="result_export_ocr">Export OCR</string>
+    <string name="result_debug_timings" translatable="false">debug · OCR %1$d ms · rules %2$d ms · %3$d×%4$d px</string>
     <string name="back">Back</string>
 </resources>

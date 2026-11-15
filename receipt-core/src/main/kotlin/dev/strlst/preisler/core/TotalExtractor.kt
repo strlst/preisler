@@ -22,13 +22,15 @@ object TotalExtractor : ReceiptExtractor {
     private const val ALTERNATIVE_FACTOR = 0.8
     private const val YEN_BONUS = 0.5
     private const val CHECK_BONUS = 6.0
+    private val sideKinds = setOf(RowKind.TAX, RowKind.COUNT, RowKind.CHANGE, RowKind.TENDER)
 
     override fun extract(document: OcrDocument): ReceiptResult {
         val rows = assembleRows(uprightLines(document))
         val items =
             rows.flatMap { row ->
-                val kinds = classify(labelOf(row))
-                row.lines.flatMap { line -> parseAmounts(line.text) }.map { Item(kinds, it) }
+                val amounts = row.lines.map { parseAmounts(it.text) }
+                val kinds = classify(labelOf(row, amounts))
+                amounts.flatten().map { Item(kinds, it) }
             }
         val rawText = rows.joinToString("\n") { row -> row.lines.joinToString(" ") { it.text } }
         val values = items.flatMap { it.amount.alternatives }.filter { it > 0 }.toSet()
@@ -86,13 +88,12 @@ object TotalExtractor : ReceiptExtractor {
         if (v !in alternatives) return 0.0
         val w = if (v == alternatives.first()) 1.0 else ALTERNATIVE_FACTOR
         val k = item.kinds
-        val side = setOf(RowKind.TAX, RowKind.COUNT, RowKind.CHANGE, RowKind.TENDER)
         val base =
             when {
                 RowKind.TOTAL in k -> TOTAL_WEIGHT
                 RowKind.PAYMENT in k && RowKind.TENDER !in k && RowKind.CHANGE !in k -> PAYMENT_WEIGHT
                 RowKind.SUBTOTAL in k && RowKind.TAX !in k -> SUBTOTAL_WEIGHT
-                k.any { it in side } -> SIDE_WEIGHT
+                k.any { it in sideKinds } -> SIDE_WEIGHT
                 else -> PLAIN_WEIGHT
             }
         return base * w + if (item.amount.yenPrefixed) YEN_BONUS else 0.0
