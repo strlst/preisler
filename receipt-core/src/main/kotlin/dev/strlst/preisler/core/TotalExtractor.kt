@@ -5,7 +5,8 @@ package dev.strlst.preisler.core
  *
  * Every positive amount (including the "4 was really ¥" alternative) is a candidate. Each
  * occurrence adds to its score by the kind of row it appears in. Cross-checks then add a
- * large bonus to values that equal お預り − お釣り or 小計 + plausible tax.
+ * large bonus to values that equal お預り − お釣り or 小計 + plausible tax. When neither a
+ * 合計 row nor a cross-check backs the winner, the largest amount is taken instead.
  */
 object TotalExtractor : ReceiptExtractor {
     private class Item(
@@ -54,14 +55,28 @@ object TotalExtractor : ReceiptExtractor {
 
         val best = values.maxWith(compareBy<Long>({ scores.getValue(it) }, { it }))
         val inTotalRow = items.any { RowKind.TOTAL in it.kinds && best in it.amount.alternatives }
-        val confidence =
+        val (total, confidence) =
             when {
-                inTotalRow && best in checked -> Confidence.HIGH
-                inTotalRow || best in checked -> Confidence.MEDIUM
-                else -> Confidence.LOW
+                inTotalRow && best in checked -> best to Confidence.HIGH
+                inTotalRow || best in checked -> best to Confidence.MEDIUM
+                else -> largestAmount(items, values) to Confidence.LOW
             }
-        return ReceiptResult(total = best, confidence = confidence, rawText = rawText)
+        return ReceiptResult(total = total, confidence = confidence, rawText = rawText)
     }
+
+    /**
+     * Fallback when nothing names or confirms a total, e.g. meal tickets (食券) that list
+     * no 合計 and no change: the total is the largest ¥ amount, or the largest amount at all.
+     */
+    private fun largestAmount(
+        items: List<Item>,
+        values: Set<Long>,
+    ): Long =
+        items
+            .filter { it.amount.yenPrefixed }
+            .map { it.amount.alternatives.first() }
+            .filter { it > 0 }
+            .maxOrNull() ?: values.max()
 
     private fun occurrenceScore(
         v: Long,

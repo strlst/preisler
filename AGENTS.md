@@ -98,7 +98,7 @@ The input is an `OcrDocument`: a list of `OcrLine(text, boundingBox)`, our own m
 7. **Confidence**:
    - `HIGH`: the winner appears in a TOTAL row *and* passes a cross-check
    - `MEDIUM`: one of the two
-   - `LOW`: neither, e.g. meal tickets (食券) with a single ¥ amount
+   - `LOW`: neither. The total is then the **largest ¥ amount** (or the largest amount if none has ¥), e.g. meal tickets (食券), which list no 合計 and no change
    - `NONE`: no amounts found
 
    On the corpus: 8 HIGH, 7 MEDIUM, 2 LOW.
@@ -126,7 +126,7 @@ receipt-core/src/test/resources/receipts/
 - **Corpus today:** 17 real receipts (konbini, supermarkets, restaurants, a shoe shop, meal tickets, one sideways photo), passing 17/17. They are in `CorpusTest`. All personal data was deleted from the fixtures before they were committed: staff names and IDs, card details, customer numbers, transaction IDs and barcodes.
 - **Test targets:**
   - Each fixture is one parameterized test. `total` must match exactly and confidence must not be NONE. `expected.json` also records `date`, which gets checked once Goal 4e implements dates.
-  - There are also focused unit tests for each pipeline stage: `AmountsTest` (normalization, OCR noise, ¥→4, rejecting dates and IDs) and `LayoutAndKindTest` (rows, sideways photos, labels, classification).
+  - There are also focused unit tests for each pipeline stage: `TotalExtractorTest` (HIGH via change, cross-checks beating a misread 合計, largest-amount fallback, no amounts), `AmountsTest` (normalization, OCR noise, ¥→4, rejecting dates and IDs) and `LayoutAndKindTest` (rows, sideways photos, labels, classification).
   - Merge gate: **100% of the corpus passes.** A new receipt that fails gets committed together with the fix, never on its own (project rule: one commit only when all tests pass).
   - The README shows corpus size as a metric.
 - **Optional, later:** an instrumented test on a CI emulator that runs ML Kit on a few anonymized receipt images, to catch OCR regressions when the ML Kit version changes.
