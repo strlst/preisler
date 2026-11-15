@@ -1,0 +1,96 @@
+{
+  "lines": [
+    {
+      "text": "1ア1",
+      "box": {
+        "left": 1733,
+        "top": 1225,
+        "right": 1907,
+        "bottom": 1309
+      }
+    },
+    {
+      "text": "和風デミハンバーグ定度",
+      "box": {
+        "left": 984,
+        "top": 1380,
+        "right": 1787,
+        "bottom": 1464
+      }
+    },
+    {
+      "text": "ごぼうサラダ",
+      "box": {
+        "left": 1034,
+        "top": 1457,
+        "right": 1507,
+        "bottom": 1543
+      }
+    },
+    {
+      "text": "目玉焼きTP",
+      "box": {
+        "left": 1067,
+        "top": 1532,
+        "right": 1522,
+        "bottom": 1613
+      }
+    },
+    {
+      "text": "ごはん(並)",
+      "box": {
+        "left": 984,
+        "top": 1671,
+        "right": 1381,
+        "bottom": 1760
+      }
+    },
+    {
+      "text": "なか集き。",
+      "box": {
+        "left": 979,
+        "top": 1756,
+        "right": 1137,
+        "bottom": 1831
+      }
+    },
+    {
+      "text": "運用当日服り",
+      "box": {
+        "left": 978,
+        "top": 1900,
+        "right": 1194,
+        "bottom": 1977
+      }
+    },
+    {
+      "text": "¥1, 090",
+      "box": {
+        "left": 1532,
+        "top": 1304,
+        "right": 1924,
+        "bottom": 1389
+      }
+    },
+    {
+      "text": "2611 12 12:10",
+      "box": {
+        "left": 1032,
+        "top": 1974,
+        "right": 1923,
+        "bottom": 2057
+      }
+    },
+    {
+      "text": "2592-036910%",
+      "box": {
+        "left": 981,
+        "top": 2054,
+        "right": 1441,
+        "bottom": 2132
+      }
+    }
+  ],
+  "imageWidth": 3024,
+  "imageHeight": 4032
+}

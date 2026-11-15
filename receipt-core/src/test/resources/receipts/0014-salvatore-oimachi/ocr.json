@@ -1,0 +1,420 @@
+{
+  "lines": [
+    {
+      "text": "Tavernelta SALVATORE",
+      "box": {
+        "left": 1105,
+        "top": 691,
+        "right": 1987,
+        "bottom": 805
+      }
+    },
+    {
+      "text": "大井町店",
+      "box": {
+        "left": 1067,
+        "top": 911,
+        "right": 1302,
+        "bottom": 964
+      }
+    },
+    {
+      "text": "東京都品川区大井町1-1-1",
+      "box": {
+        "left": 1126,
+        "top": 1050,
+        "right": 1949,
+        "bottom": 1106
+      }
+    },
+    {
+      "text": "2026年10月26日 (月)18時27分000101",
+      "box": {
+        "left": 1062,
+        "top": 1268,
+        "right": 2021,
+        "bottom": 1324
+      }
+    },
+    {
+      "text": "伝票No.",
+      "box": {
+        "left": 1095,
+        "top": 1411,
+        "right": 1285,
+        "bottom": 1469
+      }
+    },
+    {
+      "text": "アトレ大井町2 2F",
+      "box": {
+        "left": 1251,
+        "top": 1122,
+        "right": 1831,
+        "bottom": 1178
+      }
+    },
+    {
+      "text": "43 テーブNo.",
+      "box": {
+        "left": 1455,
+        "top": 1415,
+        "right": 1823,
+        "bottom": 1468
+      }
+    },
+    {
+      "text": "アヘ°ロールスプリッリ",
+      "box": {
+        "left": 1095,
+        "top": 1484,
+        "right": 1496,
+        "bottom": 1544
+      }
+    },
+    {
+      "text": "サーヒス料",
+      "box": {
+        "left": 1125,
+        "top": 1560,
+        "right": 1331,
+        "bottom": 1617
+      }
+    },
+    {
+      "text": "★Mスパイシーサラミマルゲ",
+      "box": {
+        "left": 1130,
+        "top": 1635,
+        "right": 1595,
+        "bottom": 1686
+      }
+    },
+    {
+      "text": "小計額",
+      "box": {
+        "left": 1045,
+        "top": 1772,
+        "right": 1414,
+        "bottom": 1846
+      }
+    },
+    {
+      "text": "(10%内税対象",
+      "box": {
+        "left": 1073,
+        "top": 1851,
+        "right": 1452,
+        "bottom": 1907
+      }
+    },
+    {
+      "text": "(10%内税額",
+      "box": {
+        "left": 1074,
+        "top": 1923,
+        "right": 1394,
+        "bottom": 1979
+      }
+    },
+    {
+      "text": "(消費税対付象額",
+      "box": {
+        "left": 1074,
+        "top": 1994,
+        "right": 1454,
+        "bottom": 2051
+      }
+    },
+    {
+      "text": "(消費税",
+      "box": {
+        "left": 1074,
+        "top": 2066,
+        "right": 1276,
+        "bottom": 2123
+      }
+    },
+    {
+      "text": "現 金",
+      "box": {
+        "left": 1071,
+        "top": 2210,
+        "right": 1242,
+        "bottom": 2267
+      }
+    },
+    {
+      "text": "お",
+      "box": {
+        "left": 1081,
+        "top": 2357,
+        "right": 1173,
+        "bottom": 2407
+      }
+    },
+    {
+      "text": "03-5743-6765",
+      "box": {
+        "left": 1663,
+        "top": 912,
+        "right": 2020,
+        "bottom": 962
+      }
+    },
+    {
+      "text": "(消費税",
+      "box": {
+        "left": 1253,
+        "top": 2280,
+        "right": 1453,
+        "bottom": 2339
+      }
+    },
+    {
+      "text": "合計点数",
+      "box": {
+        "left": 1068,
+        "top": 2426,
+        "right": 1305,
+        "bottom": 2485
+      }
+    },
+    {
+      "text": "T3011001039783",
+      "box": {
+        "left": 1128,
+        "top": 2723,
+        "right": 1541,
+        "bottom": 2778
+      }
+    },
+    {
+      "text": "C3",
+      "box": {
+        "left": 1968,
+        "top": 1417,
+        "right": 2020,
+        "bottom": 1468
+      }
+    },
+    {
+      "text": "¥770内",
+      "box": {
+        "left": 1845,
+        "top": 1488,
+        "right": 2021,
+        "bottom": 1543
+      }
+    },
+    {
+      "text": "¥330内",
+      "box": {
+        "left": 1844,
+        "top": 1561,
+        "right": 2021,
+        "bottom": 1617
+      }
+    },
+    {
+      "text": "¥2,673内",
+      "box": {
+        "left": 1783,
+        "top": 1633,
+        "right": 2020,
+        "bottom": 1691
+      }
+    },
+    {
+      "text": "43,773",
+      "box": {
+        "left": 1843,
+        "top": 1780,
+        "right": 2020,
+        "bottom": 1835
+      }
+    },
+    {
+      "text": "¥3,773)",
+      "box": {
+        "left": 1813,
+        "top": 1850,
+        "right": 2012,
+        "bottom": 1908
+      }
+    },
+    {
+      "text": "、無料, 無料",
+      "box": {
+        "left": 1347,
+        "top": 3420,
+        "right": 1700,
+        "bottom": 3489
+      }
+    },
+    {
+      "text": "年会費登録",
+      "box": {
+        "left": 1331,
+        "top": 3347,
+        "right": 1725,
+        "bottom": 3425
+      }
+    },
+    {
+      "text": "4343)",
+      "box": {
+        "left": 1872,
+        "top": 1919,
+        "right": 2012,
+        "bottom": 1979
+      }
+    },
+    {
+      "text": "43, 773)",
+      "box": {
+        "left": 1813,
+        "top": 1997,
+        "right": 2014,
+        "bottom": 2052
+      }
+    },
+    {
+      "text": "343)",
+      "box": {
+        "left": 1872,
+        "top": 2066,
+        "right": 2011,
+        "bottom": 2124
+      }
+    },
+    {
+      "text": "3,773",
+      "box": {
+        "left": 1723,
+        "top": 2141,
+        "right": 2015,
+        "bottom": 2195
+      }
+    },
+    {
+      "text": "¥10,0 O0",
+      "box": {
+        "left": 1678,
+        "top": 2206,
+        "right": 2031,
+        "bottom": 2270
+      }
+    },
+    {
+      "text": "★印は軽減税率(8%)適用商品",
+      "box": {
+        "left": 1130,
+        "top": 2574,
+        "right": 1932,
+        "bottom": 2638
+      }
+    },
+    {
+      "text": "内印は内税(10%)適用商品",
+      "box": {
+        "left": 1131,
+        "top": 2647,
+        "right": 1844,
+        "bottom": 2710
+      }
+    },
+    {
+      "text": "¥343)",
+      "box": {
+        "left": 1874,
+        "top": 2282,
+        "right": 2012,
+        "bottom": 2341
+      }
+    },
+    {
+      "text": "6,227",
+      "box": {
+        "left": 1725,
+        "top": 2359,
+        "right": 2016,
+        "bottom": 2414
+      }
+    },
+    {
+      "text": "ご入会はごちら ロp",
+      "box": {
+        "left": 1367,
+        "top": 3542,
+        "right": 1839,
+        "bottom": 3595
+      }
+    },
+    {
+      "text": "お得な報&クーボンをお届け!!",
+      "box": {
+        "left": 1063,
+        "top": 3022,
+        "right": 2037,
+        "bottom": 3105
+      }
+    },
+    {
+      "text": "3点",
+      "box": {
+        "left": 1937,
+        "top": 2432,
+        "right": 2025,
+        "bottom": 2490
+      }
+    },
+    {
+      "text": "WINE CLUB",
+      "box": {
+        "left": 1372,
+        "top": 3130,
+        "right": 2009,
+        "bottom": 3226
+      }
+    },
+    {
+      "text": "ワインクラブ会員募集中",
+      "box": {
+        "left": 1344,
+        "top": 3227,
+        "right": 2025,
+        "bottom": 3309
+      }
+    },
+    {
+      "text": "回路回 SALVATORE CUOMO",
+      "box": {
+        "left": 1094,
+        "top": 3724,
+        "right": 1992,
+        "bottom": 3811
+      }
+    },
+    {
+      "text": "サルヴァトーレの情報は",
+      "box": {
+        "left": 1489,
+        "top": 3834,
+        "right": 1972,
+        "bottom": 3897
+      }
+    },
+    {
+      "text": "ごちらからご覧になれます",
+      "box": {
+        "left": 1473,
+        "top": 3890,
+        "right": 1981,
+        "bottom": 3948
+      }
+    }
+  ],
+  "imageWidth": 3024,
+  "imageHeight": 4032
+}

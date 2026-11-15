@@ -47,7 +47,9 @@ The project is built and released with GitHub Actions CI. Each build produces an
 
 ## Status
 
-🚧 Early stage. You can scan a receipt and see its recognized Japanese text, all on-device. Automatic total detection comes next.
+🚧 Early stage. You can scan a receipt and preisler finds the total (合計) on-device, with a confidence rating.
+
+**Accuracy on the test corpus:** 17 / 17 real receipts (konbini, supermarkets, restaurants, shops, meal tickets). Every change must keep this at 100%.
 
 **Try it:** open [Actions](https://github.com/strlst/preisler/actions/workflows/ci.yml), pick the latest green run on `main`, download the `preisler-debug-…` artifact, and install the APK. Tagged releases (`v*`) publish signed APKs under [Releases](https://github.com/strlst/preisler/releases).
 

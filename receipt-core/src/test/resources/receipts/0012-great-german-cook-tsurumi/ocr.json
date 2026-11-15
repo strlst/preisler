@@ -1,0 +1,321 @@
+{
+  "lines": [
+    {
+      "text": "Great German Cook 鶴見",
+      "box": {
+        "left": 1102,
+        "top": 929,
+        "right": 1940,
+        "bottom": 1000
+      }
+    },
+    {
+      "text": "登録番号:T3010401103216",
+      "box": {
+        "left": 981,
+        "top": 1199,
+        "right": 1502,
+        "bottom": 1250
+      }
+    },
+    {
+      "text": "事業者名:ディプロマットダイニング 株式会社",
+      "box": {
+        "left": 966,
+        "top": 1243,
+        "right": 1877,
+        "bottom": 1311
+      }
+    },
+    {
+      "text": "2026年11月10日 18:42",
+      "box": {
+        "left": 982,
+        "top": 1318,
+        "right": 1421,
+        "bottom": 1362
+      }
+    },
+    {
+      "text": "受付時間:18:15",
+      "box": {
+        "left": 988,
+        "top": 1422,
+        "right": 1274,
+        "bottom": 1465
+      }
+    },
+    {
+      "text": "小計",
+      "box": {
+        "left": 992,
+        "top": 1833,
+        "right": 1080,
+        "bottom": 1876
+      }
+    },
+    {
+      "text": "点数",
+      "box": {
+        "left": 992,
+        "top": 1885,
+        "right": 1082,
+        "bottom": 1927
+      }
+    },
+    {
+      "text": "神奈川県横浜市鶴見区鶴見中央",
+      "box": {
+        "left": 1223,
+        "top": 1031,
+        "right": 1822,
+        "bottom": 1083
+      }
+    },
+    {
+      "text": "ポークシュニッツェル",
+      "box": {
+        "left": 1017,
+        "top": 1609,
+        "right": 1552,
+        "bottom": 1668
+      }
+    },
+    {
+      "text": "フライドポテト",
+      "box": {
+        "left": 1025,
+        "top": 1702,
+        "right": 1386,
+        "bottom": 1753
+      }
+    },
+    {
+      "text": "合計",
+      "box": {
+        "left": 988,
+        "top": 2071,
+        "right": 1125,
+        "bottom": 2140
+      }
+    },
+    {
+      "text": "内消費税",
+      "box": {
+        "left": 989,
+        "top": 2137,
+        "right": 1176,
+        "bottom": 2194
+      }
+    },
+    {
+      "text": "税率",
+      "box": {
+        "left": 990,
+        "top": 2199,
+        "right": 1081,
+        "bottom": 2244
+      }
+    },
+    {
+      "text": "現金",
+      "box": {
+        "left": 1007,
+        "top": 2435,
+        "right": 1097,
+        "bottom": 2469
+      }
+    },
+    {
+      "text": "お預り",
+      "box": {
+        "left": 1006,
+        "top": 2372,
+        "right": 1197,
+        "bottom": 2429
+      }
+    },
+    {
+      "text": "4- 2 --4",
+      "box": {
+        "left": 1440,
+        "top": 1084,
+        "right": 1623,
+        "bottom": 1128
+      }
+    },
+    {
+      "text": "TEL:045-502-3458",
+      "box": {
+        "left": 1343,
+        "top": 1141,
+        "right": 1704,
+        "bottom": 1183
+      }
+    },
+    {
+      "text": "10%",
+      "box": {
+        "left": 1143,
+        "top": 2195,
+        "right": 1235,
+        "bottom": 2241
+      }
+    },
+    {
+      "text": "おっり",
+      "box": {
+        "left": 1024,
+        "top": 2505,
+        "right": 1205,
+        "bottom": 2547
+      }
+    },
+    {
+      "text": "(内消費税",
+      "box": {
+        "left": 1339,
+        "top": 2244,
+        "right": 1536,
+        "bottom": 2292
+      }
+    },
+    {
+      "text": "1",
+      "box": {
+        "left": 1706,
+        "top": 1699,
+        "right": 1718,
+        "bottom": 1726
+      }
+    },
+    {
+      "text": "POS:001",
+      "box": {
+        "left": 1905,
+        "top": 1307,
+        "right": 2070,
+        "bottom": 1341
+      }
+    },
+    {
+      "text": "テーブル:B",
+      "box": {
+        "left": 1870,
+        "top": 1349,
+        "right": 2072,
+        "bottom": 1393
+      }
+    },
+    {
+      "text": "人数:1",
+      "box": {
+        "left": 1960,
+        "top": 1405,
+        "right": 2072,
+        "bottom": 1442
+      }
+    },
+    {
+      "text": "¥1,480内",
+      "box": {
+        "left": 1841,
+        "top": 1596,
+        "right": 2073,
+        "bottom": 1654
+      }
+    },
+    {
+      "text": "¥700内",
+      "box": {
+        "left": 1890,
+        "top": 1687,
+        "right": 2079,
+        "bottom": 1735
+      }
+    },
+    {
+      "text": "¥2,180内",
+      "box": {
+        "left": 1880,
+        "top": 1820,
+        "right": 2084,
+        "bottom": 1866
+      }
+    },
+    {
+      "text": "2",
+      "box": {
+        "left": 2065,
+        "top": 1880,
+        "right": 2087,
+        "bottom": 1911
+      }
+    },
+    {
+      "text": "42,180",
+      "box": {
+        "left": 1849,
+        "top": 2064,
+        "right": 2091,
+        "bottom": 2132
+      }
+    },
+    {
+      "text": "198",
+      "box": {
+        "left": 2020,
+        "top": 2139,
+        "right": 2095,
+        "bottom": 2176
+      }
+    },
+    {
+      "text": "2,180",
+      "box": {
+        "left": 1975,
+        "top": 2191,
+        "right": 2094,
+        "bottom": 2234
+      }
+    },
+    {
+      "text": "198)",
+      "box": {
+        "left": 2007,
+        "top": 2247,
+        "right": 2090,
+        "bottom": 2287
+      }
+    },
+    {
+      "text": "410,000",
+      "box": {
+        "left": 1810,
+        "top": 2367,
+        "right": 2087,
+        "bottom": 2423
+      }
+    },
+    {
+      "text": "10,000",
+      "box": {
+        "left": 1948,
+        "top": 2427,
+        "right": 2084,
+        "bottom": 2462
+      }
+    },
+    {
+      "text": "7,820",
+      "box": {
+        "left": 1926,
+        "top": 2504,
+        "right": 2085,
+        "bottom": 2551
+      }
+    }
+  ],
+  "imageWidth": 3024,
+  "imageHeight": 4032
+}

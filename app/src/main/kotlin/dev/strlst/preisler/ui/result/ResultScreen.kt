@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.strlst.preisler.BuildConfig
 import dev.strlst.preisler.R
+import dev.strlst.preisler.core.Confidence
 import dev.strlst.preisler.core.OcrDocument
 import dev.strlst.preisler.core.PreislerJson
 import dev.strlst.preisler.ui.scan.ScanState
@@ -77,7 +78,7 @@ fun ResultScreen(
                     .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            TotalCard(total = done?.result?.total)
+            TotalCard(total = done?.result?.total, confidence = done?.result?.confidence ?: Confidence.NONE)
             if (done != null) RecognizedTextCard(done.document)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(onClick = onRetry, modifier = Modifier.weight(1f)) {
@@ -100,7 +101,10 @@ fun ResultScreen(
 }
 
 @Composable
-private fun TotalCard(total: Long?) {
+private fun TotalCard(
+    total: Long?,
+    confidence: Confidence,
+) {
     Surface(
         color = PreislerColors.Indigo,
         contentColor = PreislerColors.Paper,
@@ -116,6 +120,11 @@ private fun TotalCard(total: Long?) {
                     style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold,
                 )
+                Text(
+                    stringResource(confidenceLabel(confidence)),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (confidence == Confidence.HIGH) PreislerColors.Paper else PreislerColors.Hanko,
+                )
             } else {
                 Text(
                     stringResource(R.string.result_total_unknown),
@@ -126,6 +135,13 @@ private fun TotalCard(total: Long?) {
         }
     }
 }
+
+private fun confidenceLabel(confidence: Confidence) =
+    when (confidence) {
+        Confidence.HIGH -> R.string.result_confidence_high
+        Confidence.MEDIUM -> R.string.result_confidence_medium
+        Confidence.LOW, Confidence.NONE -> R.string.result_confidence_low
+    }
 
 @Composable
 private fun RecognizedTextCard(document: OcrDocument) {

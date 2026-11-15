@@ -1,6 +1,6 @@
 # AGENTS.md — preisler architecture & working agreement
 
-> Status: **Approved (Goal 2, 2026-11-14).** Goals 3 and 4a done (capture + OCR + debug export); next up is Goal 4b.
+> Status: **Approved (Goal 2, 2026-11-14).** Goals 3, 4a and 4b done: total extraction passes 17/17 real receipts. Next up is the Goal 5 refactor pass, then 4c.
 > This file is the single source of truth for the architecture. Every goal that changes the
 > architecture must update it in the same commit.
 
@@ -34,9 +34,9 @@
 └──────────────────────────────────────────────┼───────────────────────┘
                                                ▼
 ┌──────────────── :receipt-core (pure Kotlin/JVM, no Android) ──────────┐
-│  OcrDocument ─▶ RowAssembler ─▶ Normalizer ─▶ CandidateExtractor      │
-│                                         ─▶ Scorer + ConsistencyChecks │
-│                                         ─▶ ReceiptResult (JSON-able)  │
+│  OcrDocument ─▶ uprightLines ─▶ assembleRows ─▶ labelOf + classify    │
+│              ─▶ parseAmounts ─▶ TotalExtractor (score + cross-checks) │
+│              ─▶ ReceiptResult (JSON-able)                             │
 └───────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -75,41 +75,40 @@ There are just two modules on purpose. More get added only when a real need show
 
 ## 4. Extraction pipeline (`:receipt-core`) — the core problem (R3)
 
-The input is an `OcrDocument`: a list of `OcrLine(text, boundingBox)`, our own model. ML Kit types are mapped to it in `:app`. The pipeline is deterministic and works the same on the JVM and on Android.
+The input is an `OcrDocument`: a list of `OcrLine(text, boundingBox)`, our own model. ML Kit types are mapped to it in `:app`. The pipeline is deterministic and works the same on the JVM and on Android. It was tuned on 17 real receipts (§5). What follows is what v1 actually does (Goal 4b).
 
-1. **RowAssembler**: ML Kit often splits one printed row into separate blocks, with the label on the left (`合計`) and the price on the right (`¥1,280`). Lines whose vertical extents overlap are merged into visual rows and sorted left→right and top→bottom. The rule is *fix the layout before the text*.
-2. **Normalizer**:
-   - NFKC normalization, so full-width digits and symbols become ASCII and `￥`/`\` become `¥`.
-   - Fixes common OCR confusions inside numeric tokens: `O→0`, `l/I→1`, `S→5`, `B→8`, `,`↔`.`.
-   - Removes stray spaces inside numbers and inside keywords (`合 計` → `合計`).
-3. **CandidateExtractor**: finds every money token (`¥1,280`, `1,280円`, `\1280`, `1280` next to a keyword) together with its row and position.
-4. **Scorer**: each candidate gets a score from rule features:
-   - **Positive keywords:** `合計`, `お会計`, `総合計`, `お買上合計`, `ご請求額`, `領収金額`, `お支払金額`
-   - **Negative keywords:** `小計`, `お預り/お預かり`, `お釣り/釣銭`, `内税`, `消費税`, `外税`, `対象`, `ポイント`, `値引/割引`, `点数`
-   - **Layout signals:** position on the page (lower is more likely), larger glyph height (totals are often printed double-size), and the `¥` prefix.
-5. **ConsistencyChecks** (cross-validation):
-   - `小計 + 外税 = 合計`
-   - `お預り − お釣り = 合計`
-   - `8%対象 + 10%対象 = 合計`
-   - The tax implied by `内税` is consistent with the total.
+1. **`uprightLines`** (`Layout.kt`): if most lines are more than twice as tall as they are wide, the photo was taken sideways. The boxes are rotated so the receipt reads top to bottom (text along +y, receipt top at large x).
+2. **`assembleRows`** (`Layout.kt`): ML Kit often returns the label (`合計`) and the amount (`¥1,280`) as separate lines. A line joins a row when its vertical center lies inside the row's first line and that line's center lies inside it. Lines are then sorted left to right. The rule is *fix the layout before the text*.
+3. **`parseAmounts`** (`Amounts.kt`): NFKC normalization, so full-width becomes ASCII and `￥`/`\` become `¥`. Two shapes count as money:
+   - a ¥-prefixed number anywhere in a line, where OCR's `Y` and a leading `*` also count as ¥
+   - a line that is nothing but a number plus markers (`)`, `内`, `軽`, `※`, `X`…)
 
-   A candidate that satisfies a check gets a large boost. When checks disagree, confidence goes down.
-6. **Output**: a `ReceiptResult`:
+   Dates, phone numbers, IDs, barcodes (more than 7 digits) and leading-zero numbers never count. Inside numbers, `O/o/D→0` and `l/I→1`, stray spaces are dropped, and 3-digit groups are joined.
+   - **The ¥→4 problem.** ML Kit very often reads `¥` as `4` (`¥360` → `4360`). A bare number starting with 4 gets a second reading without the 4, as long as what remains is a valid amount (`4, 050` stays 4,050). Scoring picks the right one.
+4. **`labelOf` + `classify`** (`RowKind.kt`): each row's words, with amounts and spaces removed, are matched against keyword sets to give the row its kinds:
+   - `TOTAL`: 合計 plus the misreadings 合十 and 舎計, お会計, ご請求, 領収金額, お支払, 買上金額, or a bare 計. Never counts when the row is also TENDER, COUNT or TAX, so お預り合計, 合計点数 and 税額合計 are excluded.
+   - `SUBTOTAL`: 小計
+   - `TAX`: 税, 対象
+   - `TENDER`: 預, 現金
+   - `CHANGE`: 釣, the misreadings お的 and おっり, or a lone お
+   - `PAYMENT`: 現計, クレジット, 取扱, デビット…
+   - `COUNT`: 点数, N点, 個
+5. **`TotalExtractor`** (scoring): every positive reading of every amount is a candidate. Each occurrence adds weight by row kind: TOTAL 10, PAYMENT 4, SUBTOTAL (without TAX) 3, unlabeled 1, TAX/COUNT/CHANGE/TENDER 0.2. A ¥ prefix adds 0.5, and the dropped-4 reading counts at ×0.8. Because the same total usually appears several times (小計, 対象額, クレジット…), frequency matters on its own.
+6. **Cross-checks**: +6 each when a value equals `TENDER − CHANGE` (change ≥ 0), or `SUBTOTAL + TAX` where the tax is 7–11% of the subtotal. On capture6 these checks outvote a 合計 that OCR misread (130 instead of 180).
+7. **Confidence**:
+   - `HIGH`: the winner appears in a TOTAL row *and* passes a cross-check
+   - `MEDIUM`: one of the two
+   - `LOW`: neither, e.g. meal tickets (食券) with a single ¥ amount
+   - `NONE`: no amounts found
 
-   ```kotlin
-   @Serializable data class ReceiptResult(
-       val schemaVersion: Int = 1,
-       val total: Long?,            // yen, integer
-       val confidence: Confidence,  // HIGH / MEDIUM / LOW / NONE
-       val subtotal: Long? = null,
-       val taxLines: List<TaxLine> = emptyList(), // rate, base, tax
-       val date: String? = null,    // ISO-8601, later goal
-       val storeName: String? = null, // later goal
-       val rawText: String,         // normalized OCR text, for debugging/export
-   )
-   ```
+   On the corpus: 8 HIGH, 7 MEDIUM, 2 LOW.
+8. **Output**: a `ReceiptResult` with `total`, `confidence` and `rawText` (the rows joined). `subtotal`, `taxLines`, `date` and `storeName` stay empty until later goals fill them with tested values.
 
-The UI shows the total in large type with its confidence, shows the supporting evidence (for example "小計 1,185 + 税 95 = 1,280 ✓"), and offers **Retry** at all times. Editing the result by hand is out of scope for now.
+**Known limits / next ideas:**
+- Glyph height (totals are often printed double-size) and position on the page are not used yet.
+- `8%対象 + 10%対象 = 合計` and the 内税-consistency check are not implemented yet.
+- No evidence is shown in the UI yet (4c).
+- Weights are hand-tuned. Any change must keep the corpus at 100%.
 
 ## 5. Testing strategy & test targets
 
@@ -124,9 +123,10 @@ receipt-core/src/test/resources/receipts/
 ```
 
 - **How fixtures are made:** a **debug-only** "Export OCR" button on the result screen shares the `OcrDocument` JSON (text only, never the picture) through the Android share sheet. The user scans a receipt, sends the JSON along with the true total, and the agent adds a fixture. Receipts found on the web can be added the same way after running them through OCR on a device or emulator.
+- **Corpus today:** 17 real receipts (konbini, supermarkets, restaurants, a shoe shop, meal tickets, one sideways photo), passing 17/17. They are in `CorpusTest`. All personal data was deleted from the fixtures before they were committed: staff names and IDs, card details, customer numbers, transaction IDs and barcodes.
 - **Test targets:**
-  - Each fixture is one parameterized test. `total` must match exactly. Other fields are checked only when `expected.json` lists them.
-  - There are also focused unit tests for each pipeline stage, such as normalizer tables and row assembly geometry.
+  - Each fixture is one parameterized test. `total` must match exactly and confidence must not be NONE. `expected.json` also records `date`, which gets checked once Goal 4e implements dates.
+  - There are also focused unit tests for each pipeline stage: `AmountsTest` (normalization, OCR noise, ¥→4, rejecting dates and IDs) and `LayoutAndKindTest` (rows, sideways photos, labels, classification).
   - Merge gate: **100% of the corpus passes.** A new receipt that fails gets committed together with the fix, never on its own (project rule: one commit only when all tests pass).
   - The README shows corpus size as a metric.
 - **Optional, later:** an instrumented test on a CI emulator that runs ML Kit on a few anonymized receipt images, to catch OCR regressions when the ML Kit version changes.
@@ -161,8 +161,8 @@ receipt-core/src/test/resources/receipts/
 3. ✅ Skeleton: both modules, Compose home screen, nav to a placeholder scan screen, CI building the debug APK artifact, release workflow
 4. Core loop, in order:
    - 4a. ✅ Camera capture in memory → ML Kit OCR → raw text on the result screen, plus the debug "Export OCR" button
-   - 4b. `:receipt-core` pipeline v1 (row assembly, normalization, keyword scoring) plus the first fixtures
-   - 4c. Consistency checks and confidence; result screen UI with evidence
+   - 4b. ✅ `:receipt-core` pipeline v1 (row assembly, normalization, keyword scoring, お預り − お釣り and 小計 + 税 cross-checks, confidence) plus 17 fixtures
+   - 4c. Evidence on the result screen ("小計 1,185 + 税 95 = 1,280 ✓"), subtotal and tax lines in `ReceiptResult`, the remaining cross-checks
    - 4d. Grow the corpus with harder receipts (thermal fade, skew, 内税 vs 外税, multiple tax rates)
    - 4e. Secondary fields: date and store name
    - 4f. LAN export plus the Python desktop receiver

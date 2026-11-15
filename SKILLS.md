@@ -84,14 +84,20 @@ git tag v0.1.0 && git push origin v0.1.0
 1. Install a **debug** build (see above). Release builds have no export button.
 2. Scan the receipt. On the result screen, tap **Export OCR**.
 3. Share it to wherever you can copy text from (mail, notes, chat), then paste the JSON here together with the **true total**. Add any other fields you know, such as subtotal and tax.
-4. The export contains only text and coordinates, never the picture. Still, check it for anything personal (names, card numbers, member IDs) before sending. Those values may be replaced with same-length placeholders, as long as the money values stay untouched.
+4. The export contains only text and coordinates, never the picture. It can still hold personal data. The agent deletes it before committing (see below), but you may also delete such lines yourself before sending.
 
-## Add a receipt fixture *(from Goal 4b)*
+## Add a receipt fixture
 
-1. Get the OCR JSON and the true values as described above.
+1. Get the OCR JSON and the true values as described above. A batch can come as `capture<N>.json` files plus a `table` (`capture;date;total`).
 2. Create `receipt-core/src/test/resources/receipts/<NNNN>-<store>/` containing:
    - `ocr.json`: exactly as exported
-   - `expected.json`: `{ "total": 1280 }` plus optional `subtotal`, `taxLines`, `date`, `storeName`
+   - `expected.json`: `{ "total": 1280, "date": "2026-11-14" }`. Add more fields only once the extractor supports them and `CorpusTest` checks them.
    - `source.md`: where it came from, store type, anything unusual (faded, skewed, 内税…)
 3. Never guess an expected value. If the user hasn't given it, ask.
-4. If the new fixture fails, fix the pipeline in the same commit. The corpus must stay at 100% passing.
+4. **Delete** personal data before the fixture is first committed. Remove the whole OCR line; don't use placeholders. That covers staff names and staff IDs (担当, 責, 扱, スタッフ), card details (masked number, 有効期限, 承認番号, 処理通番, AID, brand), customer and member numbers (お客様No, 会員), transaction IDs (取引No, TC#, レシートNo) and receipt barcodes. Store names, addresses, registration numbers (登録番号), dates and amounts stay. Re-run the corpus afterwards. If personal data ever reaches a commit, rewrite history (amend, or interactive rebase via `git rebase --onto`) and force-push before anything else.
+5. Raise `MIN_CORPUS_SIZE` in `CorpusTest`.
+6. If the new fixture fails, fix the pipeline in the same commit. The corpus must stay at 100% passing.
+
+## Tune the extraction rules
+
+Without a local Android/Gradle build, every CI round trip costs about 3 minutes. For rule tuning, reimplement the change in a throwaway scratch script (Python works) outside the repo and iterate against `receipt-core/src/test/resources/receipts/*/ocr.json` until 100% pass. Then port it faithfully to Kotlin and confirm on CI: the log prints `receipt-core tests: N run, 0 failed`. Never commit the scratch script, because a second implementation is technical debt. Check the score margins too: a fixture that wins by less than about 2 points is fragile, so note it in its `source.md`.

@@ -14,7 +14,10 @@
     <string name="scan_permission_body">preisler uses the camera to take one picture of your receipt. The picture is read on your phone and discarded right away. It is never saved or sent anywhere.</string>
     <string name="scan_permission_button">Allow camera</string>
     <string name="result_title">Result</string>
-    <string name="result_total_unknown">Not detected yet. Automatic total detection is coming in the next update.</string>
+    <string name="result_total_unknown">No total found. Try again with the whole receipt in the frame and good light.</string>
+    <string name="result_confidence_high">Confirmed by the receipt\'s own arithmetic</string>
+    <string name="result_confidence_medium">Likely correct, please double-check</string>
+    <string name="result_confidence_low">Best guess, please check against the receipt</string>
     <string name="result_recognized_text">Recognized text (%1$d lines)</string>
     <string name="result_no_text">No text found. Try better lighting or hold the phone closer.</string>
     <string name="result_retry">Scan again</string>
