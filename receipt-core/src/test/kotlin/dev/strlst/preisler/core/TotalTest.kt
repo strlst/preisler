@@ -3,13 +3,13 @@ package dev.strlst.preisler.core
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-class TotalExtractorTest {
+class TotalTest {
     private fun row(
         y: Int,
         vararg texts: String,
     ) = texts.mapIndexed { i, t -> OcrLine(t, BoundingBox(i * 500, y, i * 500 + 200, y + 40)) }
 
-    private fun extract(vararg rows: List<OcrLine>) = TotalExtractor.extract(OcrDocument(rows.flatMap { it }))
+    private fun extract(vararg rows: List<OcrLine>) = ReceiptReader.extract(OcrDocument(rows.flatMap { it }))
 
     @Test
     fun totalConfirmedByChangeIsHigh() {
@@ -49,6 +49,20 @@ class TotalExtractorTest {
             )
         assertEquals(1090L, result.total)
         assertEquals(Confidence.LOW, result.confidence)
+    }
+
+    @Test
+    fun exactTaxOnAnUnlabeledRowConfirmsTheTotal() {
+        // 外税 receipt whose 合計 and tax labels were lost: 140 + exactly 8% (11) = 151.
+        val result =
+            extract(
+                row(100, "小計", "¥140"),
+                row(200, "8税抜対象額", "¥140"),
+                row(300, "11"),
+                row(400, "151"),
+            )
+        assertEquals(151L, result.total)
+        assertEquals(Confidence.MEDIUM, result.confidence)
     }
 
     @Test

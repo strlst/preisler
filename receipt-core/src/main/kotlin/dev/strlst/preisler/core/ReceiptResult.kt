@@ -14,14 +14,16 @@ data class ReceiptResult(
     val confidence: Confidence,
     val subtotal: Long? = null,
     val taxLines: List<TaxLine> = emptyList(),
-    /** ISO-8601 date, filled in a later goal. */
+    /** ISO-8601 date printed on the receipt, or null when none is legible. */
     val date: String? = null,
-    val storeName: String? = null,
+    /** Kind of place. The store name itself is deliberately never stored (privacy). */
+    val category: Category = Category.OTHER,
     /** Normalized OCR text, kept for debugging and export. */
     val rawText: String = "",
 ) {
     companion object {
-        const val SCHEMA_VERSION = 1
+        /** v2: `storeName` removed, `category` added. */
+        const val SCHEMA_VERSION = 2
     }
 }
 

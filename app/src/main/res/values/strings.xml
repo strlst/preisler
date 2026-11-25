@@ -22,6 +22,22 @@
     <string name="result_no_text">No text found. Try better lighting or hold the phone closer.</string>
     <string name="result_retry">Scan again</string>
     <string name="result_export_ocr">Export OCR</string>
+    <string name="result_date">Date</string>
+    <string name="result_category">Category</string>
+    <string name="result_date_from_receipt">from receipt</string>
+    <string name="result_date_scan">scan date</string>
+    <string name="result_detected">detected</string>
+    <string name="result_edited">edited</string>
+    <string name="result_edit">Edit %1$s</string>
+    <string name="category_supermarket">Supermarket</string>
+    <string name="category_konbini">Konbini</string>
+    <string name="category_drugstore">Drugstore</string>
+    <string name="category_restaurant">Restaurant</string>
+    <string name="category_food_shop">Food shop</string>
+    <string name="category_retail">Retail</string>
+    <string name="category_leisure">Leisure</string>
+    <string name="category_travel">Travel &amp; transport</string>
+    <string name="category_other">Other</string>
     <string name="result_debug_timings" translatable="false">debug · OCR %1$d ms · rules %2$d ms · %3$d×%4$d px</string>
     <string name="back">Back</string>
 </resources>

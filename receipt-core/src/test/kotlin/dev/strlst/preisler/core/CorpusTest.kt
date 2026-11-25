@@ -18,27 +18,30 @@ class CorpusTest(
     private val name: String,
     private val dir: File,
 ) {
-    /** Reference values read from the paper receipt. `date` is checked from Goal 4e on. */
+    /** Reference values read from the paper receipt by the user; `date` is null when not legible. */
     @Serializable
     data class Expected(
         val total: Long,
-        val date: String? = null,
+        val date: String?,
+        val category: Category,
     )
 
     @Test
-    fun extractsTotal() {
+    fun extractsTotalDateAndCategory() {
         val document = PreislerJson.decodeFromString(OcrDocument.serializer(), File(dir, "ocr.json").readText())
         val expected = PreislerJson.decodeFromString(Expected.serializer(), File(dir, "expected.json").readText())
 
-        val result = TotalExtractor.extract(document)
+        val result = ReceiptReader.extract(document)
 
         assertEquals("total for $name", expected.total, result.total)
         assertNotEquals("confidence for $name", Confidence.NONE, result.confidence)
+        assertEquals("date for $name", expected.date, result.date)
+        assertEquals("category for $name", expected.category, result.category)
     }
 
     companion object {
         /** Guards against the corpus silently going missing from the classpath. */
-        private const val MIN_CORPUS_SIZE = 17
+        private const val MIN_CORPUS_SIZE = 23
 
         @JvmStatic
         @Parameterized.Parameters(name = "{0}")
