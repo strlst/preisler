@@ -1,14 +1,25 @@
 package dev.strlst.preisler.core
 
+import kotlin.math.ceil
+import kotlin.math.floor
+
+/** The total and how sure the rules are about it. */
+data class TotalFinding(
+    val total: Long?,
+    val confidence: Confidence,
+)
+
 /**
- * Pipeline v1 (AGENTS.md §4): upright → rows → labels/kinds → amounts → scoring + cross-checks.
+ * Finds the total (AGENTS.md §4): labels/kinds → amounts → scoring + cross-checks.
  *
  * Every positive amount (including the "4 was really ¥" alternative) is a candidate. Each
  * occurrence adds to its score by the kind of row it appears in. Cross-checks then add a
- * large bonus to values that equal お預り − お釣り or 小計 + plausible tax. When neither a
- * 合計 row nor a cross-check backs the winner, the largest amount is taken instead.
+ * large bonus to values that equal お預り − お釣り or 小計 + tax. When neither a 合計 row nor
+ * a cross-check backs the winner, the largest amount is taken instead.
  */
-object TotalExtractor : ReceiptExtractor {
+fun findTotal(rows: List<Row>): TotalFinding = TotalRules.find(rows)
+
+private object TotalRules {
     private class Item(
         val kinds: Set<RowKind>,
         val amount: Amount,
@@ -22,19 +33,19 @@ object TotalExtractor : ReceiptExtractor {
     private const val ALTERNATIVE_FACTOR = 0.8
     private const val YEN_BONUS = 0.5
     private const val CHECK_BONUS = 6.0
+    private val TAX_RATES = listOf(0.08, 0.10)
     private val sideKinds = setOf(RowKind.TAX, RowKind.COUNT, RowKind.CHANGE, RowKind.TENDER)
 
-    override fun extract(document: OcrDocument): ReceiptResult {
-        val rows = assembleRows(uprightLines(document))
+    fun find(rows: List<Row>): TotalFinding {
         val items =
             rows.flatMap { row ->
                 val amounts = row.lines.map { parseAmounts(it.text) }
                 val kinds = classify(labelOf(row, amounts))
                 amounts.flatten().map { Item(kinds, it) }
             }
-        val rawText = rows.joinToString("\n") { row -> row.lines.joinToString(" ") { it.text } }
-        val values = items.flatMap { it.amount.alternatives }.filter { it > 0 }.toSet()
-        if (values.isEmpty()) return ReceiptResult(total = null, confidence = Confidence.NONE, rawText = rawText)
+        val allValues = items.flatMap { it.amount.alternatives }.toSet()
+        val values = allValues.filter { it > 0 }.toSet()
+        if (values.isEmpty()) return TotalFinding(total = null, confidence = Confidence.NONE)
 
         val scores = values.associateWith { v -> items.sumOf { occurrenceScore(v, it) } }.toMutableMap()
 
@@ -49,7 +60,8 @@ object TotalExtractor : ReceiptExtractor {
         val checked = mutableSetOf<Long>()
         for (v in values) {
             val paidMinusChange = tenders.any { t -> changes.any { c -> c >= 0 && t - c == v } }
-            val subtotalPlusTax = subtotals.any { s -> taxes.any { x -> isPlausibleTax(x, s) && s + x == v } }
+            val subtotalPlusTax =
+                subtotals.any { s -> allValues.any { x -> s + x == v && isPlausibleTax(x, s, labeled = x in taxes) } }
             if (paidMinusChange) scores[v] = scores.getValue(v) + CHECK_BONUS
             if (subtotalPlusTax) scores[v] = scores.getValue(v) + CHECK_BONUS
             if (paidMinusChange || subtotalPlusTax) checked += v
@@ -63,7 +75,7 @@ object TotalExtractor : ReceiptExtractor {
                 inTotalRow || best in checked -> best to Confidence.MEDIUM
                 else -> largestAmount(items, values) to Confidence.LOW
             }
-        return ReceiptResult(total = total, confidence = confidence, rawText = rawText)
+        return TotalFinding(total, confidence)
     }
 
     /**
@@ -99,9 +111,21 @@ object TotalExtractor : ReceiptExtractor {
         return base * w + if (item.amount.yenPrefixed) YEN_BONUS else 0.0
     }
 
-    /** Japanese consumption tax is 8% or 10%; allow rounding slack. */
+    /**
+     * Japanese consumption tax is 8% or 10%. A value from a labeled tax row may be 7–11% of the
+     * subtotal (rounding, discounts). Any other value must be exactly 8% or 10% of it, rounded
+     * down or up, e.g. an unlabeled "11" under 小計 140 (fixture 0021).
+     */
     private fun isPlausibleTax(
         tax: Long,
         subtotal: Long,
-    ) = tax > 0 && tax < subtotal * 0.11 + 2 && tax > subtotal * 0.07 - 2
+        labeled: Boolean,
+    ): Boolean {
+        if (tax <= 0) return false
+        if (labeled && tax < subtotal * 0.11 + 2 && tax > subtotal * 0.07 - 2) return true
+        return TAX_RATES.any { rate ->
+            val exact = subtotal * rate
+            tax == floor(exact).toLong() || tax == ceil(exact).toLong()
+        }
+    }
 }

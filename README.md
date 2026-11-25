@@ -6,9 +6,9 @@ Japanese receipts are dense, mix full- and half-width characters, and list sever
 
 ## Status
 
-🚧 Early stage. You can scan a receipt and get its total with a confidence rating. Date, store and tax details come later, and so does sending results to a desktop app over the local network.
+🚧 Early stage. Scan a receipt and preisler shows its **total** with a confidence rating, its **date** (or the scan date if none is legible), and a **category** such as supermarket, konbini, drugstore, restaurant or travel. You can correct the date and category with a tap. Tax details come later, and so does sending results to a desktop app over the local network.
 
-**Accuracy on the test corpus:** 17 / 17 real receipts (konbini, supermarkets, restaurants, shops, meal tickets). Every change must keep this at 100%.
+**Accuracy on the test corpus:** 23 / 23 real receipts for total, date and category (konbini, supermarkets, drugstores, restaurants, shops, meal tickets, a rail pass). Every change must keep this at 100%.
 
 **Try it:** signed APKs are under [Releases](https://github.com/strlst/preisler/releases). Development builds come from the latest green [CI run](https://github.com/strlst/preisler/actions/workflows/ci.yml) on `main` (the `preisler-debug-…` artifact). The app runs on 64-bit ARM phones with Android 8.0 or newer.
 
@@ -18,6 +18,7 @@ Japanese receipts are dense, mix full- and half-width characters, and list sever
 - **On-device OCR.** ML Kit's bundled Japanese model runs fully offline. Receipt contents never go to a cloud service.
 - **No internet and no storage permission.** The only permission is the camera. Google's ML Kit telemetry is cut off as well, because its network permissions are removed from the app.
 - **No backups.** The app keeps no data, and Android backup and device transfer are disabled.
+- **No store names.** The store's name is only used for a moment to pick a category. It is not part of the result, so it is never kept or sent.
 - The planned desktop link will be **local network only**, opt-in, and protected by a pairing code. This section will be updated when it lands.
 
 The build fails if the app's merged manifest ever requests network or storage access, so these claims can't quietly regress.

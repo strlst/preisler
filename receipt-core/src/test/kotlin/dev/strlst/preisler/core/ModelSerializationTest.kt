@@ -27,7 +27,7 @@ class ModelSerializationTest {
         val result =
             ReceiptResult(total = 1280, confidence = Confidence.HIGH, taxLines = listOf(TaxLine(10, 1164, 116)))
         val json = PreislerJson.encodeToString(ReceiptResult.serializer(), result)
-        assertTrue(json, "\"schemaVersion\": 1" in json)
+        assertTrue(json, "\"schemaVersion\": 2" in json)
         assertEquals(result, PreislerJson.decodeFromString(ReceiptResult.serializer(), json))
     }
 }

@@ -105,11 +105,12 @@ CI's **APK size report** step lists both APKs, their largest entries and the nat
 1. Get the OCR JSON and the true values as described above. A batch can come as `capture<N>.json` files plus a `table` (`capture;date;total`).
 2. Create `receipt-core/src/test/resources/receipts/<NNNN>-<store>/` containing:
    - `ocr.json`: exactly as exported
-   - `expected.json`: `{ "total": 1280, "date": "2026-11-14" }`. Add more fields only once the extractor supports them and `CorpusTest` checks them.
+   - `expected.json`: `{ "total": 1280, "date": "2026-11-14", "category": "KONBINI" }`. All three are required. `date` is `null` when it is not legible on the paper. Propose the category (store, not purchase) and let the user confirm it. Add more fields only once the extractor supports them and `CorpusTest` checks them.
    - `source.md`: where it came from, store type, anything unusual (faded, skewed, 内税…)
 3. Never guess an expected value. If the user hasn't given it, ask.
 4. **Delete** personal data before the fixture is first committed. Remove the whole OCR line; don't use placeholders. That covers staff names and staff IDs (担当, 責, 扱, スタッフ), card details (masked number, 有効期限, 承認番号, 処理通番, AID, brand), customer and member numbers (お客様No, 会員), transaction IDs (取引No, TC#, レシートNo) and receipt barcodes. Store names, addresses, registration numbers (登録番号), dates and amounts stay. Re-run the corpus afterwards. If personal data ever reaches a commit, rewrite history (amend, or interactive rebase via `git rebase --onto`) and force-push before anything else.
 5. Raise `MIN_CORPUS_SIZE` in `CorpusTest`.
+   If a new store is miscategorized, add it to the chain table in `Category.kt` only if it is a real chain. Otherwise prefer a general cue, so the fix covers more than one receipt.
 6. If the new fixture fails, fix the pipeline in the same commit. The corpus must stay at 100% passing.
 
 ## Tune the extraction rules

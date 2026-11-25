@@ -2,9 +2,10 @@ package dev.strlst.preisler.ui.scan
 
 import androidx.camera.core.ImageProxy
 import dev.strlst.preisler.core.BoundingBox
+import dev.strlst.preisler.core.Category
 import dev.strlst.preisler.core.OcrDocument
 import dev.strlst.preisler.core.OcrLine
-import dev.strlst.preisler.core.TotalExtractor
+import dev.strlst.preisler.core.ReceiptReader
 import dev.strlst.preisler.ocr.OcrEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,11 +18,20 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.lang.reflect.Proxy
+import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScanViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
     private val document = OcrDocument(listOf(OcrLine("合計 ¥1,280", BoundingBox(0, 0, 10, 10))))
+    private val dated =
+        OcrDocument(
+            listOf(
+                OcrLine("2026年11月14日 (土)11:35", BoundingBox(0, 0, 10, 10)),
+                OcrLine("合計 ¥1,280", BoundingBox(0, 20, 10, 30)),
+            ),
+        )
+    private val scanDay = LocalDate.of(2026, 11, 25)
 
     @Before
     fun setUp() = Dispatchers.setMain(dispatcher)
@@ -39,7 +49,7 @@ class ScanViewModelTest {
             } as ImageProxy
     }
 
-    private fun viewModel(engine: OcrEngine) = ScanViewModel(engine, TotalExtractor, dispatcher)
+    private fun viewModel(engine: OcrEngine) = ScanViewModel(engine, ReceiptReader, dispatcher, today = { scanDay })
 
     @Test
     fun successProducesDoneAndClosesFrame() {
@@ -75,5 +85,34 @@ class ScanViewModelTest {
 
         vm.reset()
         assertEquals(ScanState.Idle, vm.state.value)
+    }
+
+    @Test
+    fun withoutAPrintedDateTheScanDateStandsIn() {
+        val vm = viewModel { document }
+        vm.onImageCaptured(FakeFrame().proxy)
+
+        val done = vm.state.value as ScanState.Done
+        assertEquals(null, done.result.date)
+        assertEquals(scanDay, done.date)
+        assertEquals(DateSource.SCAN, done.dateSource)
+    }
+
+    @Test
+    fun printedDateWinsAndUserEditsOverrideBoth() {
+        val vm = viewModel { dated }
+        vm.onImageCaptured(FakeFrame().proxy)
+        assertEquals(LocalDate.of(2026, 11, 14), (vm.state.value as ScanState.Done).date)
+        assertEquals(DateSource.RECEIPT, (vm.state.value as ScanState.Done).dateSource)
+
+        vm.setDate(LocalDate.of(2026, 11, 13))
+        vm.setCategory(Category.TRAVEL)
+
+        val done = vm.state.value as ScanState.Done
+        assertEquals(LocalDate.of(2026, 11, 13), done.date)
+        assertEquals(DateSource.EDITED, done.dateSource)
+        assertEquals(Category.TRAVEL, done.category)
+        assertTrue(done.categoryEdited)
+        assertEquals("the extraction itself is unchanged", "2026-11-14", done.result.date)
     }
 }

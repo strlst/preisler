@@ -3,7 +3,10 @@ package dev.strlst.preisler.core
 /** One printed row of a receipt: OCR lines that sit at the same height, left to right. */
 data class Row(
     val lines: List<OcrLine>,
-)
+) {
+    /** The row's text, its lines joined left to right with a space. */
+    val text: String get() = lines.joinToString(" ") { it.text }
+}
 
 /**
  * Returns the lines in upright receipt coordinates.
