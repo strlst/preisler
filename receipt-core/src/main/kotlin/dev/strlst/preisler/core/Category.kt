@@ -47,54 +47,30 @@ private const val FOOTER_ROWS = 5
 private val taxRate = Regex("""(8|10)(?:\.0+)?\s*%""")
 private val separators = Regex("""[\s\-‐−–·・.,:;'"()\[\]「」【】]""")
 
+// Names are space-separated; none contains a space.
 private val chains: List<Pair<Category, String>> =
     listOf(
-        Category.KONBINI to
-            listOf(
-                "LAWSON", "ローソン", "セブンイレブン", "7ELEVEN", "ファミリーマート", "FAMILYMART", "ミニストップ",
-                "デイリーヤマザキ", "NEWDAYS", "セイコーマート",
-            ),
+        Category.KONBINI to "LAWSON ローソン セブンイレブン 7ELEVEN ファミリーマート FAMILYMART ミニストップ デイリーヤマザキ NEWDAYS セイコーマート",
         Category.SUPERMARKET to
-            listOf(
-                "SEIYU", "西友", "イオン", "AEON", "ÆON", "イトーヨーカドー", "マルエツ", "サミット", "いなげや",
-                "東急ストア", "ヤオコー", "マックスバリュ", "まいばすけっと", "業務スーパー", "オーケーストア",
-            ),
+            "SEIYU 西友 イオン AEON ÆON イトーヨーカドー マルエツ サミット いなげや 東急ストア ヤオコー マックスバリュ " +
+            "まいばすけっと 業務スーパー オーケーストア",
         Category.DRUGSTORE to
-            listOf(
-                "サンドラッグ", "コクミン", "KAMEGAYA", "カメガヤ", "FITCARE", "マツモトキヨシ", "ウエルシア",
-                "スギ薬局", "ツルハ", "ココカラファイン", "クリエイトSD", "トモズ", "ダイコクドラッグ",
-            ),
-        Category.RESTAURANT to
-            listOf(
-                "すき家", "松屋", "吉野家", "サイゼリヤ", "ガスト", "マクドナルド", "スターバックス", "ドトール",
-                "タリーズ", "コメダ", "SALVATORE",
-            ),
-        Category.FOOD_SHOP to listOf("コージーコーナー", "九州屋", "シャトレーゼ", "不二家"),
-        Category.RETAIL to
-            listOf(
-                "ABCMART", "ドンキホーテ", "ニトリ", "NITORI", "ユニクロ", "UNIQLO", "無印良品", "ダイソー",
-                "ヨドバシ", "ビックカメラ", "ロフト",
-            ),
-    ).flatMap { (category, names) -> names.map { category to fold(it) } }
+            "サンドラッグ コクミン KAMEGAYA カメガヤ FITCARE マツモトキヨシ ウエルシア スギ薬局 ツルハ ココカラファイン " +
+            "クリエイトSD トモズ ダイコクドラッグ",
+        Category.RESTAURANT to "すき家 松屋 吉野家 サイゼリヤ ガスト マクドナルド スターバックス ドトール タリーズ コメダ SALVATORE",
+        Category.FOOD_SHOP to "コージーコーナー 九州屋 シャトレーゼ 不二家",
+        Category.RETAIL to "ABCMART ドンキホーテ ニトリ NITORI ユニクロ UNIQLO 無印良品 ダイソー ヨドバシ ビックカメラ ロフト",
+    ).flatMap { (category, names) -> names.split(" ").map { category to fold(it) } }
 
 // Order breaks ties: the first category with the most hits wins.
 private val cues: List<Pair<Category, List<String>>> =
     listOf(
-        Category.TRAVEL to
-            listOf(
-                "乗車券", "特急", "指定席", "運賃", "在来線", "新幹線", "定期券", "フリーパス", "タクシー", "駐車",
-                "パーキング", "宿泊", "ホテル", "給油", "ガソリン",
-            ),
-        Category.DRUGSTORE to listOf("ドラッグ", "薬局", "調剤", "医薬品"),
-        Category.RESTAURANT to
-            listOf(
-                "定食", "ランチ", "ディナー", "テーブ", "人数", "伝票", "サービス料", "ごはん", "みそ汁", "(並)",
-                "大盛", "お通し",
-            ),
-        Category.FOOD_SHOP to listOf("ベーカリー", "洋菓子", "和菓子", "青果", "鮮魚", "精肉"),
-        Category.LEISURE to
-            listOf("観光", "パーク", "入場", "交流館", "美術館", "博物館", "水族館", "動物園", "遊園地", "映画"),
-    ).map { (category, words) -> category to words.map(::fold) }
+        Category.TRAVEL to "乗車券 特急 指定席 運賃 在来線 新幹線 定期券 フリーパス タクシー 駐車 パーキング 宿泊 ホテル 給油 ガソリン",
+        Category.DRUGSTORE to "ドラッグ 薬局 調剤 医薬品",
+        Category.RESTAURANT to "定食 ランチ ディナー テーブ 人数 伝票 サービス料 ごはん みそ汁 (並) 大盛 お通し",
+        Category.FOOD_SHOP to "ベーカリー 洋菓子 和菓子 青果 鮮魚 精肉",
+        Category.LEISURE to "観光 パーク 入場 交流館 美術館 博物館 水族館 動物園 遊園地 映画",
+    ).map { (category, words) -> category to words.split(" ").map(::fold) }
 
 /** Folds text for matching: NFKC, upper case, 口→O, no separators, dakuten/handakuten dropped (ガ→カ, プ→フ). */
 internal fun fold(text: String): String {

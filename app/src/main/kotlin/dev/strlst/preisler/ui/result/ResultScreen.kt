@@ -204,7 +204,10 @@ private fun DetailsCard(
                 DetailRow(
                     label = stringResource(R.string.result_category),
                     value = stringResource(categoryLabel(done.category)),
-                    note = stringResource(if (done.categoryEdited) R.string.result_edited else R.string.result_detected),
+                    note =
+                        stringResource(
+                            if (done.categoryEdited) R.string.result_edited else R.string.result_detected,
+                        ),
                     onClick = { pickingCategory = true },
                 )
                 DropdownMenu(expanded = pickingCategory, onDismissRequest = { pickingCategory = false }) {
