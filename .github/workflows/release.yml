@@ -87,6 +87,28 @@ jobs:
           apksigner=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
           "$apksigner" verify --print-certs app/build/outputs/apk/release/app-release.apk | grep -v -i "public key"
 
+      - name: Verify R8 kept ML Kit intact
+        run: |
+          m=app/build/outputs/mapping/release/mapping.txt
+          renamed=$(grep -E '^com\.google\.(mlkit|android\.gms\.internal\.mlkit_)[^ ]* -> ' "$m" \
+            | awk '{sub(":$","",$3); if ($1 != $3) print}' || true)
+          kept=$(grep -cE '^com\.google\.mlkit\.[^ ]* -> com\.google\.mlkit\.' "$m" || true)
+          echo "ML Kit classes kept with original names: $kept"
+          if [ -n "$renamed" ] || [ "$kept" -eq 0 ]; then
+            echo "::error::R8 renamed or removed ML Kit classes (breaks OCR at runtime, see proguard-rules.pro):"
+            echo "$renamed" | head -20
+            exit 1
+          fi
+
+      - name: Upload release candidate (dry run only)
+        if: env.DRY_RUN == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: preisler-release-candidate-${{ github.sha }}
+          path: app/build/outputs/apk/release/app-release.apk
+          retention-days: 7
+          if-no-files-found: error
+
       - name: Rename APK
         if: env.DRY_RUN != 'true'
         run: |
@@ -98,8 +120,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # The R8 mapping lets obfuscated error messages from this build be translated back.
+          cp app/build/outputs/mapping/release/mapping.txt "out/mapping-${PREISLER_VERSION_NAME}.txt"
           if gh release view "$PREISLER_VERSION_NAME" >/dev/null 2>&1; then
-            gh release upload "$PREISLER_VERSION_NAME" out/*.apk --clobber
+            gh release upload "$PREISLER_VERSION_NAME" out/* --clobber
           else
-            gh release create "$PREISLER_VERSION_NAME" out/*.apk --title "preisler $PREISLER_VERSION_NAME" --generate-notes
+            gh release create "$PREISLER_VERSION_NAME" out/* --title "preisler $PREISLER_VERSION_NAME" --generate-notes
           fi

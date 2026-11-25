@@ -62,6 +62,10 @@ The agent session can push branches but **not tags**, so the user starts release
 
 **Dry run (the agent can do this):** push any commit to the `release-dry-run` branch, e.g. `git push -f origin main:release-dry-run`. `release.yml` then runs every check, builds the APK signed with the real keystore and prints its certificate, but creates no tag and publishes nothing. Do this before asking the user to release whenever `release.yml`, signing or the build setup changed.
 
+**Release candidate:** the dry run also uploads the signed APK as the artifact `preisler-release-candidate-<sha>` (kept 7 days). Code shrinking only happens in release builds, so the user installs and scans with this APK before the real release whenever code, dependencies or R8 rules changed.
+
+**Translate an obfuscated error** from a release build (names like `og3.a`): download `mapping-<version>.txt` from the GitHub release and look up the short names (`grep -- '-> og3:' mapping-v0.1.1.txt`). For a build without a published mapping, re-run that commit through the dry run with a temporary step that prints the matching lines. R8 output is deterministic for identical inputs.
+
 **If a release run fails** after creating its tag, fix the problem and run the workflow again with the same version. A tag without a published release is moved to the new commit automatically. AGP 9 note: unit-test tasks exist for the debug build type only (`testDebugUnitTest`), so release checks use those.
 
 `release.yml` runs the checks, builds a minified APK signed with the release keystore, and publishes `preisler-v0.1.0.apk` as a GitHub Release. The version name comes from the tag and the version code from the run number.

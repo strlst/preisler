@@ -47,6 +47,19 @@ jobs:
       - name: Assemble release APK (unsigned smoke test)
         run: ./gradlew :app:lintRelease :app:assembleRelease
 
+      - name: Verify R8 kept ML Kit intact
+        run: |
+          m=app/build/outputs/mapping/release/mapping.txt
+          renamed=$(grep -E '^com\.google\.(mlkit|android\.gms\.internal\.mlkit_)[^ ]* -> ' "$m" \
+            | awk '{sub(":$","",$3); if ($1 != $3) print}' || true)
+          kept=$(grep -cE '^com\.google\.mlkit\.[^ ]* -> com\.google\.mlkit\.' "$m" || true)
+          echo "ML Kit classes kept with original names: $kept"
+          if [ -n "$renamed" ] || [ "$kept" -eq 0 ]; then
+            echo "::error::R8 renamed or removed ML Kit classes (breaks OCR at runtime, see proguard-rules.pro):"
+            echo "$renamed" | head -20
+            exit 1
+          fi
+
       - name: APK size report
         run: |
           for apk in app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/release/app-release-unsigned.apk; do

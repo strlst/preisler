@@ -44,7 +44,8 @@ There are two modules on purpose. `:app` holds no parsing logic, and `:receipt-c
 | Serialization | kotlinx.serialization (`PreislerJson`) | Fixtures, debug export, and the future LAN payload |
 | Build | Gradle 9.3.1, AGP 9.1.1 (built-in Kotlin), Kotlin 2.3.20, Compose BOM 2026.04.01. All versions in `gradle/libs.versions.toml` | compileSdk/targetSdk 36 until Compose 1.12, which needs 37 |
 | Platforms | minSdk 26, **arm64-v8a only** (`ndk.abiFilters`), native libs stored uncompressed (the default) | ML Kit's OCR library is ~11 MB per CPU type. Shipping only arm64 took release 44.8 → 15.3 MB and debug 64.5 → 27.9 MB. Uncompressed means less storage and a faster install. Consequence: debug builds don't run on x86 emulators, so UI tests need an ARM emulator |
-| Quality gates | Unit tests, Android Lint, ktlint via Spotless, privacy guard (§3), R8 release smoke build | Every one fails CI |
+| Quality gates | Unit tests, Android Lint, ktlint via Spotless, privacy guard (§3), R8 release smoke build, R8 ML Kit guard | Every one fails CI |
+| R8 (release) | Full mode (AGP 9 default) with keep rules for ML Kit and its gms/firebase/datatransport internals (`app/proguard-rules.pro`). CI fails if any ML Kit class is renamed or removed. Every release ships its `mapping-<version>.txt` | v0.1.0 regression: R8 optimized ML Kit's reflection- and JNI-driven internals, and every release-build scan failed with a null field read. JVM tests can't catch that, so the mapping check is the guard. The keep rules cost +0.2 MB |
 
 **Performance notes:** debug builds show OCR time, rule time and image size on the result screen. Capture resolution stays at full 12 MP until those timings show a need to change it; lowering it is the obvious lever. `TotalExtractor` parses each line once and runs in well under a millisecond per receipt.
 
